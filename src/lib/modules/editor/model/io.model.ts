@@ -16,6 +16,7 @@ import { $dirty, $doc, docLoaded } from "./doc.model";
 import { $cache, $store } from "./assets.model";
 import { $sim } from "./sim.model";
 import { errored } from "./ui.model";
+import { t } from "../i18n";
 
 // ---- events ----
 /** `key` is the marketplace record the bytes came from — what the layer names are stored under.
@@ -78,35 +79,36 @@ const newFaceFx = createEffect(async (name: string = "Custom") => {
 // a Wear OS bundle is one zip (.aab). No need to make the user pick the format they downloaded —
 // and the bundle is sniffed by its magic bytes, because a downloaded one often loses its
 // extension on the way (renamed, or unwrapped from a .zip).
-const importFacerFx = createEffect(async (files: File[]) => {
-  const has = (n: string) => files.some((f) => (f.webkitRelativePath || f.name).endsWith(n));
-  const head = files.length === 1 ? new Uint8Array(await files[0].slice(0, 2).arrayBuffer()) : null;
-  const aab = head?.[0] === 0x50 && head?.[1] === 0x4b;
-  const wm = has("watch.pxml");
+const importFacerFx = attach({
+  source: t,
+  effect: async (t, files: File[]) => {
+    const has = (n: string) => files.some((f) => (f.webkitRelativePath || f.name).endsWith(n));
+    const head =
+      files.length === 1 ? new Uint8Array(await files[0].slice(0, 2).arrayBuffer()) : null;
+    const aab = head?.[0] === 0x50 && head?.[1] === 0x4b;
+    const wm = has("watch.pxml");
 
-  if (aab) {
-    const { face } = await (await import("../core/import/wff")).wffToFace(files[0]);
+    if (aab) {
+      const { face } = await (await import("../core/import/wff")).wffToFace(files[0]);
+      const { doc } = fromLegacy(face);
+
+      return { doc, label: "wff", dirty: true, cache: await decodeAssets(doc.images) };
+    }
+    const toFace = wm
+      ? (await import("../core/import/watchmaker")).watchmakerToFace
+      : (await import("../core/import/facer")).facerToFace;
+
+    if (!wm && !has("watchface.json")) throw new Error(t.notExport);
+    const { face } = await toFace(files);
     const { doc } = fromLegacy(face);
 
-    return { doc, label: "wff", dirty: true, cache: await decodeAssets(doc.images) };
-  }
-  const toFace = wm
-    ? (await import("../core/import/watchmaker")).watchmakerToFace
-    : (await import("../core/import/facer")).facerToFace;
-
-  if (!wm && !has("watchface.json"))
-    throw new Error(
-      "not a watchface export: no watchface.json (Facer), watch.pxml (WatchMaker) or .aab bundle",
-    );
-  const { face } = await toFace(files);
-  const { doc } = fromLegacy(face);
-
-  return {
-    doc,
-    label: wm ? "watchmaker" : "facer",
-    dirty: true,
-    cache: await decodeAssets(doc.images),
-  };
+    return {
+      doc,
+      label: wm ? "watchmaker" : "facer",
+      dirty: true,
+      cache: await decodeAssets(doc.images),
+    };
+  },
 });
 
 /** The bytes, with every resized or adjusted asset re-encoded from its pinned original, and the

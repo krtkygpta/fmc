@@ -3,6 +3,7 @@
   // documented and one that doesn't, isn't.
   import { Dialog } from "$lib/shared/components/dialog";
   import { formatKeys, isMac, shortcutGroups } from "../shared/shortcuts";
+  import { t } from "../i18n";
 
   interface Props {
     open: boolean;
@@ -12,16 +13,18 @@
 
   const mac = isMac();
   const groups = shortcutGroups();
+  // the keymap table stays English; its words are looked up here, falling back to themselves
+  const word = (table: Record<string, string>, en: string) => table[en] ?? en;
 </script>
 
-<Dialog {open} {onClose} title="Keyboard shortcuts">
+<Dialog {open} {onClose} title={$t.keyboardShortcuts}>
   <div class="groups">
     {#each groups as g (g.group)}
       <section>
-        <h3 class="type-label">{g.group}</h3>
+        <h3 class="type-label">{word($t.shortcutGroups, g.group)}</h3>
         {#each g.items as s (s.keys)}
           <div class="row type-small">
-            <span class="label">{s.label}</span>
+            <span class="label">{word($t.shortcuts, s.label)}</span>
             <span class="keys">
               {#each formatKeys(s.keys, mac) as k (k)}<kbd class="type-caption">{k}</kbd>{/each}
             </span>

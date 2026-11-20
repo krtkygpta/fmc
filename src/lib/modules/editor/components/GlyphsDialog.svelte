@@ -10,6 +10,7 @@
   import { Icon } from "$lib/shared/components/icon";
   import { editorModel } from "../model";
   import { labelsOf, WEIGHTS } from "../model/font-sprite.model";
+  import { t } from "../i18n";
 
   const {
     $glyphDialog: target,
@@ -23,6 +24,14 @@
     fontFilePicked,
     installedFontsRequested,
   } = editorModel;
+
+  // the app's own families carry English labels from the model; installed ones keep their names
+  const fonts = $derived(
+    $fontOptions.map((o) => ({
+      ...o,
+      label: ($t.fonts as Record<string, string>)[o.label] ?? o.label,
+    })),
+  );
 
   let fileEl = $state<HTMLInputElement>();
   let canvasEl = $state<HTMLCanvasElement>();
@@ -51,21 +60,21 @@
   }
 </script>
 
-<Dialog open={Boolean($target)} title="Sprites from a font" onClose={() => glyphDialogClosed()}>
+<Dialog open={Boolean($target)} title={$t.spritesFromFont} onClose={() => glyphDialogClosed()}>
   <div class="fields">
-    <Field label="Font">
+    <Field label={$t.font}>
       <div class="row">
         <Select
           value={$form.family}
-          options={$fontOptions}
+          options={fonts}
           onChange={(family) => glyphFormPatched({ family })}
         />
-        <span class="tool" title="Upload a .ttf / .otf / .woff">
+        <span class="tool" title={$t.uploadFont}>
           <Button kind="secondary" square onClick={() => fileEl?.click()}>
             <Icon name="upload" size={22} />
           </Button>
         </span>
-        <span class="tool" title="Pick from the fonts installed on this machine">
+        <span class="tool" title={$t.pickInstalled}>
           <Button
             kind="secondary"
             square
@@ -85,7 +94,7 @@
       onchange={pickFile}
     />
     <div class="grid">
-      <Field label="Size">
+      <Field label={$t.size}>
         <Input
           type="number"
           min={4}
@@ -94,14 +103,14 @@
           onInput={(v) => glyphFormPatched({ sizePx: clamp(v, 4, 400, 4) })}
         />
       </Field>
-      <Field label="Weight">
+      <Field label={$t.weight}>
         <Select
           value={String($form.weight)}
           options={WEIGHTS.map((w) => ({ value: String(w), label: String(w) }))}
           onChange={(v) => glyphFormPatched({ weight: +v })}
         />
       </Field>
-      <Field label="Spacing">
+      <Field label={$t.spacing}>
         <Input
           type="number"
           min={-20}
@@ -113,14 +122,14 @@
     </div>
     <div class="grid">
       <div class="wide">
-        <Field label="Color">
+        <Field label={$t.color}>
           <!-- the swatch sits inside the field's box, in front of the hex it opens a picker for -->
           <div class="color">
             <input
               class="swatch"
               type="color"
               value={$form.color}
-              aria-label="Glyph color"
+              aria-label={$t.glyphColor}
               oninput={(e) => glyphFormPatched({ color: e.currentTarget.value })}
             />
             <Input
@@ -131,14 +140,14 @@
           </div>
         </Field>
       </div>
-      <Field label="Style">
+      <Field label={$t.style}>
         <label class="check type-body">
           <Checkbox checked={$form.italic} onChange={(italic) => glyphFormPatched({ italic })} />
-          Italic
+          {$t.italic}
         </label>
       </Field>
     </div>
-    <Field label="Characters" hint="space-separated — index = value, keep the watch's order">
+    <Field label={$t.characters} hint={$t.charactersHint}>
       <Input value={$form.labelsText} onInput={(labelsText) => glyphFormPatched({ labelsText })} />
     </Field>
   </div>
@@ -148,19 +157,23 @@
   </div>
   <p class="info type-caption">
     {#if $preview}
-      {$preview.bitmaps.length} sprites · {$preview.w}×{$preview.h} px ·
-      {($preview.bytes / 1024).toFixed(1)} KB in the file
+      {$t.spriteInfo(
+        $preview.bitmaps.length,
+        $preview.w,
+        $preview.h,
+        ($preview.bytes / 1024).toFixed(1),
+      )}
     {/if}
   </p>
 
   {#snippet actions()}
-    <Button kind="secondary" onClick={() => glyphDialogClosed()}>Cancel</Button>
+    <Button kind="secondary" onClick={() => glyphDialogClosed()}>{$t.cancel}</Button>
     <Button
       kind="primary"
       disabled={!labelsOf($form).length}
       onClick={() => glyphsGenerateRequested()}
     >
-      Replace frames
+      {$t.replaceFrames}
     </Button>
   {/snippet}
 </Dialog>

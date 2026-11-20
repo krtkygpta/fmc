@@ -19,6 +19,7 @@ import type { NodeId } from "../core/document/doc";
 import { $doc } from "./doc.model";
 import { glyphsRequested } from "./create.model";
 import { errored } from "./ui.model";
+import { t } from "../i18n";
 
 /** One entry of the font picker: a CSS family list, and what to call it. */
 export type FontOption = { value: string; label: string };
@@ -165,7 +166,8 @@ sample({
 });
 sample({
   clock: registerFontFx.fail,
-  fn: ({ params }) => `${params.name} is not a font the browser can read`,
+  source: t,
+  fn: (t, { params }) => t.notAFont(params.name),
   target: errored,
 });
 
@@ -190,8 +192,9 @@ sample({
 });
 sample({
   clock: localFontsFx.doneData,
-  filter: (families) => families.length === 0,
-  fn: () => "No access to installed fonts — upload a font file instead",
+  source: t,
+  filter: (_, families) => families.length === 0,
+  fn: (t) => t.noFontAccess,
   target: errored,
 });
 

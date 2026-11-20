@@ -8,7 +8,9 @@
   import { authModel } from "$lib/modules/auth/model";
   import { marketModel } from "$lib/modules/market/model";
   import { DEVICES } from "$lib/modules/market/lib/devices";
+  import { common } from "$lib/shared/i18n";
   import { editorModel } from "../model";
+  import { t } from "../i18n";
 
   const { $user: user } = authModel;
   const {
@@ -23,10 +25,10 @@
   } = marketModel;
   const { buildCurrentBin, previewBlob } = editorModel;
 
-  const DEVICE_OPTIONS = [
-    { value: "", label: "Select a watch…" },
+  const deviceOptions = $derived([
+    { value: "", label: $t.selectWatch },
     ...DEVICES.map((d) => ({ value: d.value, label: d.label })),
-  ];
+  ]);
 
   async function publish() {
     if (!$user) return;
@@ -42,24 +44,24 @@
 
 <Dialog
   open={$open}
-  title={$editing ? "Edit details" : "Publish to marketplace"}
+  title={$editing ? $t.editDetails : $t.publishToMarket}
   onClose={() => publishDialogClosed()}
 >
   {#if !$editing}
-    <p class="desc type-caption">The watchface will be visible to everyone.</p>
+    <p class="desc type-caption">{$t.visibleToEveryone}</p>
   {/if}
   <div class="fields">
-    <Field label="Name">
+    <Field label={$t.name}>
       <Input value={$form.name} maxlength={100} onInput={(name) => publishFormPatched({ name })} />
     </Field>
-    <Field label="Watch" hint="Sets the badge on your card and which device filter finds it.">
+    <Field label={$common.watch} hint={$t.watchHint}>
       <Select
         value={$form.device}
-        options={DEVICE_OPTIONS}
+        options={deviceOptions}
         onChange={(device) => publishFormPatched({ device })}
       />
     </Field>
-    <Field label="Description" hint="Markdown works; links become clickable.">
+    <Field label={$t.description} hint={$t.descriptionHint}>
       <Textarea
         value={$form.description}
         rows={3}
@@ -69,9 +71,9 @@
     </Field>
   </div>
   {#snippet actions()}
-    <Button kind="secondary" onClick={() => publishDialogClosed()}>Cancel</Button>
+    <Button kind="secondary" onClick={() => publishDialogClosed()}>{$t.cancel}</Button>
     <Button kind="primary" disabled={$busy || !$ready} onClick={publish}>
-      {$busy ? "Uploading…" : $editing ? "Save" : "Publish"}
+      {$busy ? $t.uploading : $editing ? $t.save : $t.publish}
     </Button>
   {/snippet}
 </Dialog>

@@ -46,6 +46,7 @@ import { $screen, $sel, $selected, select, selectionSet } from "./selection.mode
 import { $cache, cachePatched, retintRequested } from "./assets.model";
 import { $sim } from "./sim.model";
 import { errored } from "./ui.model";
+import { t as words } from "../i18n";
 
 /** Figma-style alignment direction. */
 export type AlignDir = "left" | "hcenter" | "right" | "top" | "vcenter" | "bottom";
@@ -409,15 +410,15 @@ sample({
 // file's — so each one is resolved on its own, and only the fresh ids are merged. The document
 // and screen are captured up front: the paste only lands if both are still what they were.
 const importBinsFx = attach({
-  source: { doc: $doc, screen: $screen },
-  effect: async (target, files: File[]) => ({
+  source: { doc: $doc, screen: $screen, t: words },
+  effect: async ({ t, ...target }, files: File[]) => ({
     ...target,
     clips: await Promise.all(
       files.map(async (f) => {
         const { doc } = fromLegacy(parseBin(await f.arrayBuffer()));
         const from = doc.screens.find((s) => s.kind === target.screen) ?? doc.screens[0];
 
-        if (!from) throw new Error(`${f.name} has no screens to take layers from`);
+        if (!from) throw new Error(t.noScreens(f.name));
         return clipOf({ selected: [...from.layers], doc, cache: await decodeAssets(doc.images) });
       }),
     ),
@@ -459,9 +460,9 @@ sample({
 });
 sample({
   clock: importBinsFx.doneData,
-  source: current,
+  source: { ...current, t: words },
   filter: (now, done) => !unchanged(now, done),
-  fn: () => "The face changed while the files were being read — import them again",
+  fn: ({ t }) => t.faceChanged,
   target: errored,
 });
 sample({

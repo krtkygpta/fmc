@@ -12,6 +12,7 @@
   import { capsFor } from "../shared/shortcuts";
   import { editorModel } from "../model";
   import DragGrip from "./DragGrip.svelte";
+  import { t } from "../i18n";
 
   // a group folding open or shut; local (Svelte 5's default), so opening a parent doesn't also
   // play every nested group that was already open, and nothing plays on the first render
@@ -44,15 +45,6 @@
     moveRequested,
   } = editorModel;
 
-  const kindNames: Record<Layer["kind"], string> = {
-    image: "Image",
-    number: "Number",
-    hand: "Hand",
-    ring: "Progress ring",
-    slot: "Widget slot",
-    group: "Group",
-    raw: "Node",
-  };
   const kindIcons: Record<Layer["kind"], IconName> = {
     image: "image",
     number: "tag",
@@ -63,20 +55,20 @@
     raw: "deployed_code",
   };
   // the handful of raw tags that do turn up, so their rows aren't all called "Node"
-  const rawNames: Record<number, string> = {
-    [TAG.name]: "Name",
-    [TAG.preview]: "Preview",
-    [TAG.pvStruct]: "preview",
-  };
+  const rawNames = $derived<Record<number, string>>({
+    [TAG.name]: $t.rawName,
+    [TAG.preview]: $t.rawPreview,
+    [TAG.pvStruct]: $t.rawPvStruct,
+  });
 
   /** The derived label — what a layer is called until it is renamed. */
   export function layerLabel(l: Layer) {
-    let s = l.kind === "raw" ? (rawNames[l.tag] ?? `0x${l.tag.toString(16)}`) : kindNames[l.kind];
+    let s = l.kind === "raw" ? (rawNames[l.tag] ?? `0x${l.tag.toString(16)}`) : $t.kinds[l.kind];
 
     if (l.kind !== "group" && l.kind !== "raw" && l.meta.source)
       s += ` · ${pickerLabel(l.meta.source)}`;
     if (l.kind === "slot") s += ` · ${pickerLabel(l.metrics[l.active])}`;
-    if (l.kind === "hand" && l.meta.source) s += ` · hand`;
+    if (l.kind === "hand" && l.meta.source) s += ` · ${$t.handSuffix}`;
     if (l.conditions.length) s += ` · ${describeConditions(l.conditions).join(", ")}`;
     return s;
   }
@@ -86,11 +78,11 @@
   let fileInput = $state<Record<string, HTMLInputElement | undefined>>({});
 
   function onAdd(kind: "image" | "hand", e: Event) {
-    const t = e.target as HTMLInputElement;
-    const files = t.files;
+    const el = e.target as HTMLInputElement;
+    const files = el.files;
 
     if (files?.length) widgetAdded({ kind, files: [...files] });
-    t.value = "";
+    el.value = "";
   }
 
   const currentScreen = $derived($doc?.screens.find((s) => s.kind === $screen) ?? null);
@@ -287,56 +279,67 @@
     />
     <Menu align="start">
       {#snippet trigger({ toggle })}
-        <span class="tool-slot" title="Add a layer">
+        <span class="tool-slot" title={$t.addLayer}>
           <Button size="small" kind="secondary" disabled={!$doc} onClick={toggle}>
             <Icon name="add" size={22} />
           </Button>
         </span>
       {/snippet}
       <MenuItem onClick={() => fileInput.image?.click()}>
-        <Icon name="image" size={22} /> Image…
+        <Icon name="image" size={22} />
+        {$t.imageFile}
       </MenuItem>
       <!-- one transparent frame: the art comes later, from the inspector — a dropped file
            or the font generator -->
       <MenuItem onClick={() => imageAdded()}>
-        <Icon name="image" size={22} /> Empty image
+        <Icon name="image" size={22} />
+        {$t.emptyImage}
       </MenuItem>
       <!-- ten blank frames: the art comes from the inspector, either "regenerate from a font"
            or a PNG dropped on a single frame — no ten-file picker any more -->
       <MenuItem onClick={() => numberAdded()}>
-        <Icon name="tag" size={22} /> Number
+        <Icon name="tag" size={22} />
+        {$t.kinds.number}
       </MenuItem>
       <MenuItem onClick={() => fileInput.hand?.click()}>
-        <Icon name="schedule" size={22} /> Hand…
+        <Icon name="schedule" size={22} />
+        {$t.handFile}
       </MenuItem>
       <MenuItem onClick={() => nodeAdded("ring")}>
-        <Icon name="progress_activity" size={22} /> Progress ring
+        <Icon name="progress_activity" size={22} />
+        {$t.kinds.ring}
       </MenuItem>
       <MenuItem onClick={() => progressLineAdded({ dir: "horizontal", on: "battery" })}>
-        <Icon name="linear_scale" size={22} /> Progress line
+        <Icon name="linear_scale" size={22} />
+        {$t.progressLine}
       </MenuItem>
       <MenuItem onClick={() => progressLineAdded({ dir: "vertical", on: "battery" })}>
-        <Icon name="height" size={22} /> Vertical progress line
+        <Icon name="height" size={22} />
+        {$t.vProgressLine}
       </MenuItem>
       <!-- ponytail: time lines come horizontal only; a vertical one is the same frames turned,
            add the entries if someone asks -->
       <MenuItem onClick={() => progressLineAdded({ dir: "horizontal", on: "minute" })}>
-        <Icon name="timer" size={22} /> Minute progress line
+        <Icon name="timer" size={22} />
+        {$t.minuteProgressLine}
       </MenuItem>
       <MenuItem onClick={() => progressLineAdded({ dir: "horizontal", on: "hour" })}>
-        <Icon name="hourglass_empty" size={22} /> Hour progress line
+        <Icon name="hourglass_empty" size={22} />
+        {$t.hourProgressLine}
       </MenuItem>
       <MenuItem onClick={() => nodeAdded("group")}>
-        <Icon name="folder" size={22} /> Group
+        <Icon name="folder" size={22} />
+        {$t.kinds.group}
       </MenuItem>
       <MenuItem onClick={() => slotAdded()}>
-        <Icon name="highlight_alt" size={22} /> Widget slot
+        <Icon name="highlight_alt" size={22} />
+        {$t.kinds.slot}
       </MenuItem>
     </Menu>
     <div class="spacer"></div>
     <Menu>
       {#snippet trigger({ toggle })}
-        <span class="tool-slot" title="Selected layer">
+        <span class="tool-slot" title={$t.selectedLayer}>
           <Button size="small" kind="ghost" disabled={!$sel} onClick={toggle}>
             <Icon name="more_horiz" size={22} />
           </Button>
@@ -349,7 +352,7 @@
     {#if currentScreen}
       {@render screenRow(currentScreen)}
     {:else}
-      <p class="empty">Drop a .bin here or grab one from the marketplace.</p>
+      <p class="empty">{$t.emptyTree}</p>
     {/if}
   </div>
   {#if ctx}
@@ -364,7 +367,7 @@
       {#if ctx.screen}
         <MenuItem danger onClick={aodRemoved}>
           <Icon name="delete" size={22} />
-          Delete AOD screen
+          {$t.deleteAod}
         </MenuItem>
       {:else}
         {@render layerActions()}
@@ -383,42 +386,50 @@
 {#snippet layerActions()}
   {#if $sel && $selected.length === 1}
     <MenuItem onClick={() => (renaming = $sel)}>
-      <Icon name="edit" size={20} /> Rename
+      <Icon name="edit" size={20} />
+      {$t.rename}
     </MenuItem>
   {/if}
   <MenuItem keys={capsFor("mod+d")} onClick={duplicateRequested}>
-    <Icon name="content_copy" size={20} /> Duplicate
+    <Icon name="content_copy" size={20} />
+    {$t.duplicate}
   </MenuItem>
   <MenuItem keys={capsFor("mod+c")} onClick={copyRequested}>
-    <Icon name="content_paste" size={20} /> Copy
+    <Icon name="content_paste" size={20} />
+    {$t.copy}
   </MenuItem>
   <MenuItem keys={capsFor("mod+x")} onClick={cutRequested}>
-    <Icon name="content_cut" size={20} /> Cut
+    <Icon name="content_cut" size={20} />
+    {$t.cut}
   </MenuItem>
   {#if $clipboard}
     <MenuItem keys={capsFor("mod+v")} onClick={pasteRequested}>
-      <Icon name="assignment_turned_in" size={20} /> Paste
+      <Icon name="assignment_turned_in" size={20} />
+      {$t.paste}
     </MenuItem>
   {/if}
   {#if selIsGroup}
     <MenuItem onClick={ungroupRequested}>
-      <Icon name="folder_open" size={20} /> Ungroup
+      <Icon name="folder_open" size={20} />
+      {$t.ungroup}
     </MenuItem>
   {:else if canGroup}
     <MenuItem onClick={groupRequested}>
-      <Icon name="folder" size={20} /> Group
+      <Icon name="folder" size={20} />
+      {$t.group}
     </MenuItem>
   {/if}
   <MenuItem onClick={() => flagOfSelection("hidden")}>
     <Icon name={$selected[0]?.hidden ? "visibility" : "visibility_off"} size={20} />
-    {$selected[0]?.hidden ? "Show" : "Hide"}
+    {$selected[0]?.hidden ? $t.show : $t.hide}
   </MenuItem>
   <MenuItem onClick={() => flagOfSelection("locked")}>
     <Icon name={$selected[0]?.locked ? "lock_open" : "lock"} size={20} />
-    {$selected[0]?.locked ? "Unlock" : "Lock"}
+    {$selected[0]?.locked ? $t.unlock : $t.lock}
   </MenuItem>
   <MenuItem danger keys={capsFor("delete")} onClick={deleteRequested}>
-    <Icon name="delete" size={20} /> Delete
+    <Icon name="delete" size={20} />
+    {$t.delete}
   </MenuItem>
 {/snippet}
 
@@ -445,7 +456,7 @@
       <span class="chevron-spacer"></span>
     {/if}
     <Icon name={s.kind === "aod" ? "dark_mode" : "monitor"} size={20} class="node-icon" />
-    <span class="label">{s.kind === "aod" ? "AOD" : "Screen"}</span>
+    <span class="label">{s.kind === "aod" ? $t.aod : $t.screen}</span>
   </button>
   {#if kids.length && openNodes.has(s.id)}
     <div transition:slide={fold}>
