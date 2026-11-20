@@ -12,6 +12,7 @@ export const LOCALES = {
   es: "Español",
   hi: "हिन्दी",
 } as const;
+
 export type Locale = keyof typeof LOCALES;
 
 const STORAGE_KEY = "fmc:locale";
@@ -20,6 +21,7 @@ const isLocale = (v: unknown): v is Locale => typeof v === "string" && v in LOCA
 const initial = (): Locale => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
+
     if (isLocale(saved)) return saved;
   } catch {
     // storage blocked — fall through to the browser's languages
@@ -27,6 +29,7 @@ const initial = (): Locale => {
   if (typeof navigator === "undefined") return "en";
   for (const tag of navigator.languages ?? [navigator.language]) {
     const base = tag.toLowerCase().split("-")[0];
+
     if (isLocale(base)) return base;
   }
   return "en";
