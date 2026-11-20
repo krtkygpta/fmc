@@ -7,44 +7,46 @@
     ACCENT_PALETTE,
     ID_METRIC,
     METRIC_GOAL,
-    pickerLabel,
     SLEEP_IDS,
     SUN_IDS,
     type Sim,
     type SimMetric,
   } from "../core/document/sources";
   import { editorModel } from "../model";
+  import { common } from "$lib/shared/i18n";
+  import { t, sourcePick } from "../i18n-inspector";
   const { $sim: sim, $ids: ids, simPatched, overrideSet } = editorModel;
 
   // One input per METRIC, not per id: the firmware answers several ids out of one metric, so a row each would be eight inputs for one number — and the last one typed would
   // silently win. Only the metrics this document actually reads are offered; the raw per-id
   // escape hatch is still there, below, for driving two widgets apart.
-  const METRICS: [SimMetric, string, string][] = [
-    ["steps", "Steps", "Steps goal"],
-    ["hr", "Heart rate, bpm", ""],
-    ["battery", "Battery, %", ""],
-    ["calories", "Calories, kcal", "Calories goal, kcal"],
-    ["distance", "Distance, m", "Distance goal, m"],
-    ["temp", "Temperature, °", ""],
-    ["aqi", "AQI", ""],
-    ["spo2", "Blood oxygen, %", ""],
-    ["stands", "Stand hours", "Stand goal, hours"],
-    ["exerciseMin", "Exercise, min", "Exercise goal, min"],
-    ["activeHours", "Active hours", "Active hours goal"],
+  // labels: $t.metric[m], and $t.goal[METRIC_GOAL[m]] for the ones a ring divides by a goal
+  const METRICS: SimMetric[] = [
+    "steps",
+    "hr",
+    "battery",
+    "calories",
+    "distance",
+    "temp",
+    "aqi",
+    "spo2",
+    "stands",
+    "exerciseMin",
+    "activeHours",
   ];
 
   // The clock-shaped fields: each feeds an hour source and a minute source (and, for sleep, a
   // ring against its goal), so one time field beats the four number boxes those ids would ask
   // for. Shown only while the document reads the ids behind them.
-  const TIMES: [keyof Sim & ("sunrise" | "sunset" | "sleep" | "sleepGoal"), string, number[]][] = [
-    ["sunrise", "Sunrise", SUN_IDS],
-    ["sunset", "Sunset", SUN_IDS],
-    ["sleep", "Sleep", SLEEP_IDS],
-    ["sleepGoal", "Sleep goal", SLEEP_IDS],
+  const TIMES: [keyof Sim & ("sunrise" | "sunset" | "sleep" | "sleepGoal"), number[]][] = [
+    ["sunrise", SUN_IDS],
+    ["sunset", SUN_IDS],
+    ["sleep", SLEEP_IDS],
+    ["sleepGoal", SLEEP_IDS],
   ];
 
   const used = $derived(new Set($ids.map(({ id }) => ID_METRIC[id]).filter(Boolean)));
-  const shown = $derived(METRICS.filter(([m]) => used.has(m)));
+  const shown = $derived(METRICS.filter((m) => used.has(m)));
   const overrides = $derived(
     $ids.filter(({ id }) => $sim.overrides[id] !== undefined && $sim.overrides[id] !== "").length,
   );
@@ -54,7 +56,7 @@
   }
 
   const shownTimes = $derived(
-    TIMES.filter(([, , behind]) => $ids.some(({ id }) => behind.includes(id))),
+    TIMES.filter(([, behind]) => $ids.some(({ id }) => behind.includes(id))),
   );
   const hhmm = (mins: number) =>
     `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
@@ -66,11 +68,11 @@
 </script>
 
 <div class="panel type-small" data-dense>
-  <PanelSection title="Clock">
+  <PanelSection title={$t.clock}>
     <div class="switch-row">
       <Switch checked={$sim.live} onChange={(v) => simPatched({ live: v })} />
       <button type="button" class="check-label" onclick={() => simPatched({ live: !$sim.live })}
-        >live time</button
+        >{$t.liveTime}</button
       >
     </div>
     {#if !$sim.live}
@@ -84,11 +86,11 @@
     <div class="switch-row">
       <Switch checked={$sim.is24h} onChange={(v) => simPatched({ is24h: v })} />
       <button type="button" class="check-label" onclick={() => simPatched({ is24h: !$sim.is24h })}
-        >24-hour format</button
+        >{$t.format24h}</button
       >
     </div>
   </PanelSection>
-  <PanelSection title="Display">
+  <PanelSection title={$t.display}>
     <div class="switch-row">
       <Switch
         checked={$sim.showSlotPlaceholders}
@@ -98,11 +100,11 @@
         type="button"
         class="check-label"
         onclick={() => simPatched({ showSlotPlaceholders: !$sim.showSlotPlaceholders })}
-        >widget-slot placeholders</button
+        >{$t.slotPlaceholders}</button
       >
     </div>
     <div>
-      <span class="type-label muted-label">Accent color</span>
+      <span class="type-label muted-label">{$common.accentColor}</span>
       <!-- the watch offers a fixed set, so this mirrors it rather than opening a color wheel;
            recolors widgets flagged via meta[7]===4, see metaInfo in lib/sources.ts -->
       <div class="accent-row">
@@ -110,8 +112,8 @@
           type="button"
           class="swatch none"
           class:on={!$sim.accentColor}
-          title="No accent — draw the colors baked into the file"
-          aria-label="No accent"
+          title={$t.noAccentTitle}
+          aria-label={$t.noAccent}
           onclick={() => simPatched({ accentColor: null })}
         >
           <Icon name="close" size={12} />
@@ -130,25 +132,22 @@
       </div>
     </div>
   </PanelSection>
-  <PanelSection title="Values">
+  <PanelSection title={$t.values}>
     {#if shown.length}
       <div class="fields-grid">
-        {#each shown as [key, label, goalLabel]}
+        {#each shown as key}
           <div>
-            <span class="type-label muted-label">{label}</span>
+            <span class="type-label muted-label">{$t.metric[key]}</span>
             <Input
               type="number"
               value={String($sim[key])}
               onInput={(v) => simPatched({ [key]: v === "" ? "" : +v })}
             />
           </div>
-          {#if goalLabel}
-            {@const goal = METRIC_GOAL[key]!}
+          {@const goal = METRIC_GOAL[key]}
+          {#if goal}
             <div>
-              <span
-                class="type-label muted-label"
-                title="what a percentage ring on this metric divides by">{goalLabel}</span
-              >
+              <span class="type-label muted-label" title={$t.goalTitle}>{$t.goal[goal]}</span>
               <Input
                 type="number"
                 value={String($sim[goal])}
@@ -161,9 +160,9 @@
     {/if}
     {#if shownTimes.length}
       <div class="fields-grid">
-        {#each shownTimes as [key, label]}
+        {#each shownTimes as [key]}
           <div>
-            <span class="type-label muted-label">{label}</span>
+            <span class="type-label muted-label">{$t.time[key]}</span>
             <Input
               type="time"
               value={hhmm($sim[key])}
@@ -181,25 +180,23 @@
   {#if $ids.length}
     <details class="raw">
       <summary>
-        per-source overrides{overrides ? ` — ${overrides} set` : ""}
+        {$t.overrides(overrides)}
       </summary>
       <div class="ids-list">
         {#each $ids as { id, max }}
           <div class="id-row">
-            <span class="id-label type-caption type-mono">{pickerLabel(id)}</span>
+            <span class="id-label type-caption type-mono">{sourcePick($t, id)}</span>
             <span class="id-input">
               <Input
                 type="number"
-                placeholder="auto"
+                placeholder={$t.auto}
                 value={String($sim.overrides[id] ?? "")}
                 onInput={(v) => overrideSet({ id, value: v })}
               />
             </span>
             <!-- meta.max: the widget's OWN declared maximum (a hand's 60 positions, a number's
                  digit cap), not the metric's range — it doesn't scale what you type here -->
-            {#if max}<span
-                class="max-hint type-caption"
-                title="the widget's declared max, not this metric's range">max {max}</span
+            {#if max}<span class="max-hint type-caption" title={$t.maxTitle}>{$t.max(max)}</span
               >{/if}
           </div>
         {/each}

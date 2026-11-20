@@ -10,6 +10,7 @@
   import Source from "./props/source.svelte";
   import Frames from "./props/frames.svelte";
   import { editorModel } from "../model";
+  import { t } from "../i18n-inspector";
   const { $doc: doc, $selected: selected, invertColorsRequested } = editorModel;
 
   // the primary selection — the sections are all single-layer
@@ -20,22 +21,22 @@
   {#if layer}
     <fieldset class="fields" disabled={Boolean(layer.locked)}>
       {#if layer.locked}
-        <p class="type-caption hint-xs">locked — unlock it in the layer tree to edit</p>
+        <p class="type-caption hint-xs">{$t.locked}</p>
       {/if}
       <!-- a section with nothing to show for this kind of layer hides itself, title and all -->
-      <PanelSection title="Layout"><Geometry {layer} /></PanelSection>
-      <PanelSection title="Color"><Adjust {layer} /></PanelSection>
-      <PanelSection title="Data"><Source {layer} /></PanelSection>
-      <PanelSection title="Art"><Frames {layer} /></PanelSection>
+      <PanelSection title={$t.layout}><Geometry {layer} /></PanelSection>
+      <PanelSection title={$t.color}><Adjust {layer} /></PanelSection>
+      <PanelSection title={$t.data}><Source {layer} /></PanelSection>
+      <PanelSection title={$t.art}><Frames {layer} /></PanelSection>
     </fieldset>
   {:else}
-    <p class="hint type-small">Nothing selected.</p>
+    <p class="hint type-small">{$t.nothingSelected}</p>
   {/if}
   {#if $doc}
     <div class="row">
       <Button size="small" kind="secondary" onClick={() => invertColorsRequested()}>
         <Icon name="contrast" size={18} />
-        invert {layer ? "layer" : "screen"}
+        {layer ? $t.invertLayer : $t.invertScreen}
       </Button>
     </div>
   {/if}
