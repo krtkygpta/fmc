@@ -2,6 +2,7 @@
   import { Card } from "$lib/shared/components/card";
   import SignupForm from "../components/signup-form.svelte";
   import { authModel } from "../model";
+  import { t } from "../i18n";
   import { goto } from "$app/navigation";
 
   const { $user: user } = authModel;
@@ -11,11 +12,11 @@
   });
 </script>
 
-<svelte:head><title>Sign up — FMC Watchfaces</title></svelte:head>
+<svelte:head><title>{$t.registerTitle}</title></svelte:head>
 
 <div class="wrapper">
   <div class="panel">
-    <h1 class="type-title">Create your account</h1>
+    <h1 class="type-title">{$t.createYourAccount}</h1>
     <Card>
       <SignupForm />
     </Card>

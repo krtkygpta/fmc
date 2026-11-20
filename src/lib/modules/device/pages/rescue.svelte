@@ -3,6 +3,9 @@
   // advertises. The only action here is a factory reset, sent right after auth.
   import { Button } from "$lib/shared/components/button";
   import { rescueModel } from "../model";
+  import { t } from "../i18n";
+
+  const ISSUES = "https://github.com/freethinkel/fmc/issues";
 
   const {
     resetRequested,
@@ -16,41 +19,30 @@
 </script>
 
 <svelte:head>
-  <title>Rescue — FMC</title>
+  <title>{$t.rescueTitle}</title>
   <meta name="robots" content="noindex" />
 </svelte:head>
 
 <div class="page">
   <article>
-    <h1 class="type-title">Rescue</h1>
-    <p>
-      For a watch that shows the CMF logo, goes black and stays there, but still shows up in the
-      Bluetooth picker. This sends the watch a <strong>factory reset</strong> and nothing else: no file,
-      no sync. Everything on the watch is wiped, including the face that broke it.
-    </p>
-    <p>
-      Use the same browser you installed the face from — pairing needs a tap on the watch, and the
-      key saved from that install is the only way around a screen that doesn't light up. Close
-      Nothing X first so it isn't holding the watch.
-    </p>
+    <h1 class="type-title">{$t.rescue}</h1>
+    <!-- our own dictionary, so {@html} is safe -->
+    <p>{@html $t.rescueIntro}</p>
+    <p>{$t.rescueBrowser}</p>
     <Button kind="danger" disabled={$busy} onClick={() => resetRequested()}>
-      Factory reset the watch
+      {$t.factoryReset}
     </Button>
     {#if $status}<p class="status">{$status}</p>{/if}
     {#if $error}<p class="error">{$error}</p>{/if}
     {#if $done}
-      <p class="status">
-        Sent. The watch should restart on its own within a minute. If it does, or if the step above
-        is where it stopped, <a href="https://github.com/freethinkel/fmc/issues">tell us</a>
-        — nobody has confirmed this path yet.
-      </p>
+      <p class="status">{@html $t.rescueSent(ISSUES)}</p>
     {/if}
     {#if $log.length}
-      <p>Whatever happened, send us this log:</p>
-      <Button kind="secondary" onClick={copy}>Copy log</Button>
+      <p>{$t.sendLog}</p>
+      <Button kind="secondary" onClick={copy}>{$t.copyLog}</Button>
       <pre class="type-caption type-mono">{$log.join("\n")}</pre>
     {/if}
-    <a class="back" href="/help">Back to "Before you connect"</a>
+    <a class="back" href="/help">{$t.backToBefore}</a>
   </article>
 </div>
 

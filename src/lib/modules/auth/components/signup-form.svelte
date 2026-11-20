@@ -4,6 +4,8 @@
   import { Field } from "$lib/shared/components/field";
   import { Input } from "$lib/shared/components/input";
   import { authModel } from "../model";
+  import { common } from "$lib/shared/i18n";
+  import { t } from "../i18n";
 
   const {
     registerRequested,
@@ -20,17 +22,17 @@
     registerRequested();
   }}
 >
-  <Field label="Full Name">
+  <Field label={$t.fullName}>
     <Input
       type="text"
-      placeholder="John Doe"
+      placeholder={$t.namePlaceholder}
       required
       autocomplete="name"
       value={$form.name}
       onInput={(name) => signupFormPatched({ name })}
     />
   </Field>
-  <Field label="Email">
+  <Field label={$t.email}>
     <Input
       type="email"
       placeholder="m@example.com"
@@ -40,7 +42,7 @@
       onInput={(email) => signupFormPatched({ email })}
     />
   </Field>
-  <Field label="Password" hint="Must be at least 8 characters long.">
+  <Field label={$t.password} hint={$t.passwordHint}>
     <Input
       type="password"
       required
@@ -50,7 +52,7 @@
       onInput={(password) => signupFormPatched({ password })}
     />
   </Field>
-  <Field label="Confirm Password">
+  <Field label={$t.confirmPassword}>
     <Input
       type="password"
       required
@@ -63,8 +65,8 @@
   {#if $err}
     <Text as="p" variant="caption" tone="error">{$err}</Text>
   {/if}
-  <Button type="submit" kind="primary" disabled={$busy}>Create Account</Button>
-  <p class="link type-caption">Already have an account? <a href="/login">Sign in</a></p>
+  <Button type="submit" kind="primary" disabled={$busy}>{$t.createAccount}</Button>
+  <p class="link type-caption">{$t.haveAccount} <a href="/login">{$common.signIn}</a></p>
 </form>
 
 <style>

@@ -1,6 +1,6 @@
 // Web Bluetooth: watch connection and flashing.
 import { noticeOf } from "../lib/notice";
-import { createEffect, createEvent, createStore, sample } from "effector";
+import { attach, createEffect, createEvent, createStore, sample } from "effector";
 import { reset } from "patronum";
 import {
   NoFreeSlotError,
@@ -15,6 +15,7 @@ import { rememberDial, unclaimDial } from "../lib/catalog-names";
 import { assertFlashable, flashWarning } from "$lib/modules/editor/core/format";
 import { dbg, dbgListeners, errText } from "../lib/ble-protocol";
 import * as bleApi from "./ble.api";
+import { t } from "../i18n";
 
 // what a flash needs: the file, a thumbnail of the face so the watch's id list can show it
 // later (the file itself never reaches catalog-names), and a key identifying the face across
@@ -151,16 +152,17 @@ const otaProgressed = createEvent<number>();
 export const firmwareFlashRequested = createEvent<FirmwareFlash>();
 export const otaReset = createEvent();
 
-const flashFirmwareFx = createEffect(async ({ image, device }: FirmwareFlash) => {
-  if (!watch) throw new Error("connect the watch first");
-  const info = checkOtaTarget(image, watch.name, device);
+const flashFirmwareFx = attach({
+  source: t,
+  effect: async (t, { image, device }: FirmwareFlash) => {
+    if (!watch) throw new Error(t.connectFirstErr);
+    const info = checkOtaTarget(image, watch.name, device);
 
-  if (watch.battery !== null && watch.battery < OTA_MIN_BATTERY)
-    throw new Error(
-      `battery at ${watch.battery}% — charge it to ${OTA_MIN_BATTERY}% and keep it on the charger`,
-    );
-  dbg("ota image:", info);
-  await watch.flashFirmware(image, otaProgressed);
+    if (watch.battery !== null && watch.battery < OTA_MIN_BATTERY)
+      throw new Error(t.lowBattery(watch.battery, OTA_MIN_BATTERY));
+    dbg("ota image:", info);
+    await watch.flashFirmware(image, otaProgressed);
+  },
 });
 export const $otaFlashing = flashFirmwareFx.pending;
 
@@ -218,15 +220,18 @@ const installProgressed = createEvent<number>();
 export const packageInstallRequested = createEvent<Uint8Array>();
 export const installReset = createEvent();
 
-const installPackageFx = createEffect(async (data: Uint8Array) => {
-  if (!watch) throw new Error("connect the watch first");
-  // fresh: the slot choice depends on what's there now, not on what was there at connect
-  const state = await watch.readWp2();
+const installPackageFx = attach({
+  source: t,
+  effect: async (t, data: Uint8Array) => {
+    if (!watch) throw new Error(t.connectFirstErr);
+    // fresh: the slot choice depends on what's there now, not on what was there at connect
+    const state = await watch.readWp2();
 
-  if (!state) throw new Error("the watch runs stock firmware — flash the patched firmware first");
-  const { name } = await watch.installPackage(data, state, installProgressed);
+    if (!state) throw new Error(t.stockFirmwareErr);
+    const { name } = await watch.installPackage(data, state, installProgressed);
 
-  return { name, state: (await watch.readWp2()) ?? ("stock" as const) };
+    return { name, state: (await watch.readWp2()) ?? ("stock" as const) };
+  },
 });
 export const $installing = installPackageFx.pending;
 
@@ -411,7 +416,8 @@ sample({
 });
 sample({
   clock: bleApi.forgetFx.doneData,
-  fn: (n) => (n ? `forgot ${n} device(s) — connect to pick again` : "nothing to forget"),
+  source: t,
+  fn: (t, n) => (n ? t.forgot(n) : t.nothingToForget),
   target: statusChanged,
 });
 sample({
