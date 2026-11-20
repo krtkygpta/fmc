@@ -2,17 +2,23 @@
   // The Community page's body: one panel of links. What is listed is data — see lib/community.ts.
   import { Icon } from "$lib/shared/components/icon";
   import { AUTHOR_LINKS, COMMUNITY_LINKS } from "../../lib/community";
+  import { t } from "../../i18n";
+
+  // a link's words in the current language; one the dictionary doesn't know keeps its own
+  const words = (link: { id: string; title: string; description: string }) =>
+    $t.links[link.id] ?? link;
 </script>
 
 <section class="panel">
-  <h2 class="type-heading">Join the community</h2>
-  <p class="lead">Meet other CMF Watch creators, share your work and get help.</p>
+  <h2 class="type-heading">{$t.joinCommunity}</h2>
+  <p class="lead">{$t.communityLead}</p>
 
   <ul>
     {#each COMMUNITY_LINKS as link (link.id)}
       <li>
         {#if link.url}
           {@const external = !link.url.startsWith("/")}
+          {@const w = words(link)}
           <a
             class="tile"
             href={link.url}
@@ -33,8 +39,8 @@
               <span class="glyph"><Icon name={link.icon} size={24} /></span>
             {/if}
             <span class="text">
-              <span class="title type-subtitle">{link.title}</span>
-              {#if link.description}<span class="desc type-caption">{link.description}</span>{/if}
+              <span class="title type-subtitle">{w.title}</span>
+              {#if w.description}<span class="desc type-caption">{w.description}</span>{/if}
             </span>
             <Icon name={external ? "open_in_new" : "chevron_right"} size={20} class="out" />
           </a>
@@ -42,8 +48,8 @@
           <div class="tile soon" aria-disabled="true">
             <span class="glyph"><Icon name={link.icon} size={24} /></span>
             <span class="text">
-              <span class="title type-subtitle">{link.title}</span>
-              <span class="desc type-caption">Coming soon</span>
+              <span class="title type-subtitle">{words(link).title}</span>
+              <span class="desc type-caption">{$t.comingSoon}</span>
             </span>
           </div>
         {/if}
@@ -51,8 +57,8 @@
     {/each}
   </ul>
 
-  <h2 class="author type-heading">Made by freethinkel</h2>
-  <p class="lead">Follow along for new features, previews and the occasional watchface.</p>
+  <h2 class="author type-heading">{$t.madeBy("freethinkel")}</h2>
+  <p class="lead">{$t.authorLead}</p>
 
   <ul>
     {#each AUTHOR_LINKS.filter((l) => l.url) as link (link.id)}

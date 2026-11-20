@@ -4,6 +4,7 @@
   import type { RecordModel } from "pocketbase";
   import { marketModel } from "../../model";
   import { WatchfaceCard } from "../watchface-card";
+  import { t } from "../../i18n";
 
   interface Props {
     items: RecordModel[];
@@ -17,7 +18,7 @@
   const {
     items,
     loading = false,
-    empty = "Nothing here yet.",
+    empty,
     showAuthor = true,
     manage = false,
     onMore,
@@ -36,7 +37,7 @@
   const liked = (id: string) => $likes.some((l) => l.watchface === id && l.user === $user?.id);
 
   function remove(wf: RecordModel) {
-    if (!confirm(`Delete "${wf.name}"?`)) return;
+    if (!confirm($t.confirmDelete(wf.name))) return;
     removeRequested(wf);
   }
 
@@ -76,7 +77,7 @@
         onPublishToggle={() => publishToggleRequested(wf)}
       />
     {:else}
-      <p class="empty type-caption">{empty}</p>
+      <p class="empty type-caption">{empty ?? $t.nothingHere}</p>
     {/each}
     {#if onMore}<div class="sentinel" use:sentinel></div>{/if}
   {/if}

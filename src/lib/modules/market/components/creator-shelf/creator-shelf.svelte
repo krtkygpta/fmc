@@ -10,6 +10,7 @@
   import { Skeleton } from "$lib/shared/components/skeleton";
   import { fileUrl } from "$lib/shared/api";
   import type { TopCreator } from "../../lib/top-creators";
+  import { t } from "../../i18n";
 
   interface Props {
     creators: TopCreator<RecordModel>[];
@@ -21,7 +22,7 @@
   // the face query expanded owner onto every face alike, so the first carries the profile
   const owner = (c: TopCreator<RecordModel>) =>
     c.faces[0]?.expand?.owner as RecordModel | undefined;
-  const name = (c: TopCreator<RecordModel>) => owner(c)?.name || "Creator";
+  const name = (c: TopCreator<RecordModel>) => owner(c)?.name || $t.creator;
   const avatar = (c: TopCreator<RecordModel>) => {
     const u = owner(c);
 
@@ -48,7 +49,7 @@
       </Card>
     {/each}
   {:else if !creators.length}
-    <p class="empty">No top creators yet — publish faces the community will love.</p>
+    <p class="empty">{$t.noTopCreators}</p>
   {:else}
     {#each creators as c (c.id)}
       <Card>
@@ -58,9 +59,7 @@
             <span class="who">
               <span class="creator-name type-subtitle" title={name(c)}>{name(c)}</span>
               <span class="totals type-caption">
-                {c.faces.length}
-                {c.faces.length === 1 ? "face" : "faces"} · {c.downloads}
-                downloads · {c.likes} likes
+                {$t.totals(c.faces.length, c.downloads, c.likes)}
               </span>
             </span>
           </a>
@@ -70,7 +69,7 @@
               <a class="dial" href="/market/{wf.id}">
                 <img src={fileUrl(wf, "preview")} alt={wf.name} loading="lazy" title={wf.name} />
                 <span class="dial-name type-caption">{wf.name}</span>
-                <span class="dial-dl type-caption" title="Downloads">
+                <span class="dial-dl type-caption" title={$t.downloads}>
                   <Icon name="download" size={16} />
                   {wf.downloads || 0}
                 </span>

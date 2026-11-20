@@ -3,9 +3,10 @@
   import { Page } from "$lib/shared/components/page";
   import { StoreTabs } from "$lib/shared/components/store-tabs";
   import { CommunityPanel } from "../components/community-panel";
+  import { common } from "$lib/shared/i18n";
 </script>
 
-<svelte:head><title>Community — FMC</title></svelte:head>
+<svelte:head><title>{$common.community} — FMC</title></svelte:head>
 
 <Page>
   {#snippet header()}

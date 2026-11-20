@@ -17,6 +17,7 @@
   import { StatStrip } from "$lib/shared/components/stat-strip";
   import { compact, day } from "$lib/shared/lib/format";
   import { deviceLabel } from "../lib/devices";
+  import { t } from "../i18n";
 
   interface Props {
     id: string;
@@ -75,7 +76,7 @@
 
 <!-- matches the title scripts/seo.ts bakes into this page's HTML: Google indexes the rendered
      one, an unfurler only ever sees the baked one -->
-<svelte:head><title>{faceTitle(wf?.name || "Watchface")}</title></svelte:head>
+<svelte:head><title>{faceTitle(wf?.name || $t.watchface)}</title></svelte:head>
 
 <Page>
   <div class="detail">
@@ -84,13 +85,13 @@
       <BackBtn href="/" />
       {#if wf}
         <div class="quick">
-          <button class="round type-small" title="Share" aria-label="Share" onclick={share}>
+          <button class="round type-small" title={$t.share} aria-label={$t.share} onclick={share}>
             <Icon name={copied ? "check" : "ios_share"} size={22} />
           </button>
           <button
             class="round like type-small"
-            title={$user ? "Like" : "Sign in to like"}
-            aria-label="Like"
+            title={$user ? $t.like : $t.signInToLike}
+            aria-label={$t.like}
             aria-pressed={liked}
             disabled={!$user || $likePending}
             onclick={() => $user && likeToggleRequested({ wf, userId: $user.id })}
@@ -121,8 +122,8 @@
             <button
               class="round toggle-aod type-small"
               class:on={$dialScreen === "aod"}
-              title={$dialScreen === "aod" ? "Show the main screen" : "Show the always-on screen"}
-              aria-label="Toggle the always-on screen"
+              title={$dialScreen === "aod" ? $t.showMain : $t.showAod}
+              aria-label={$t.toggleAod}
               onclick={() => dialScreenSet($dialScreen === "aod" ? "main" : "aod")}
             >
               <!-- both glyphs stay in one cell and trade places, so nothing is added to the
@@ -140,13 +141,9 @@
             <h1 class="name type-display">{wf.name}</h1>
             <div class="byline">
               {#if owner}
-                <a
-                  class="author type-subtitle"
-                  href="/user/{wf.owner}"
-                  title="Watchfaces by this creator"
-                >
+                <a class="author type-subtitle" href="/user/{wf.owner}" title={$t.byCreator}>
                   <Avatar name={owner.name || "?"} />
-                  <span>{owner.name || "Unknown"}</span>
+                  <span>{owner.name || $t.unknown}</span>
                 </a>
               {/if}
               {#if wf.type}<Badge>{wf.type}</Badge>{/if}
@@ -160,11 +157,12 @@
               {#if !$bleInfo}
                 <Button size="large" onClick={() => connectRequested()} disabled={$connecting}>
                   <Icon name="bluetooth" size={22} />
-                  {$connecting ? "Connecting…" : "Connect watch to install"}
+                  {$connecting ? $t.connecting : $t.connectToInstall}
                 </Button>
               {:else if $installed}
                 <Button size="large" disabled>
-                  <Icon name="check" size={22} /> Installed
+                  <Icon name="check" size={22} />
+                  {$t.installed}
                 </Button>
                 <Button
                   size="large"
@@ -172,32 +170,32 @@
                   onClick={() => installRequested(wf)}
                   disabled={$installing}
                 >
-                  Install again
+                  {$t.installAgain}
                 </Button>
               {:else}
                 <Button size="large" onClick={() => installRequested(wf)} disabled={$installing}>
                   <Icon name="watch" size={22} />
-                  {$installing ? "Installing…" : "Install watchface"}
+                  {$installing ? $t.installing : $t.installWatchface}
                 </Button>
               {/if}
             </div>
             <div class="secondary">
               <Button kind="secondary" onClick={() => editRequested(wf)}>
                 <Icon name="edit" size={22} />
-                <span>Edit</span>
+                <span>{$t.edit}</span>
               </Button>
               <Button kind="secondary" href={downloadUrl(wf)}>
                 <Icon name="download" size={22} />
-                <span>Download</span>
+                <span>{$t.download}</span>
               </Button>
             </div>
           </div>
 
           <StatStrip
             items={[
-              { label: "Likes", value: compact(likeCount) },
-              { label: "Downloads", value: compact(wf.downloads) },
-              { label: "Flashed", value: compact(wf.flashes) },
+              { label: $t.likes, value: compact(likeCount) },
+              { label: $t.downloads, value: compact(wf.downloads) },
+              { label: $t.flashed, value: compact(wf.flashes) },
             ]}
           />
 
@@ -207,8 +205,8 @@
 
           <p class="dates type-caption">
             <Icon name="calendar_today" size={14} />
-            Published {day(wf.created)}
-            {#if day(wf.updated) !== day(wf.created)}· updated {day(wf.updated)}{/if}
+            {$t.publishedOn(day(wf.created))}
+            {#if day(wf.updated) !== day(wf.created)}· {$t.updatedOn(day(wf.updated))}{/if}
           </p>
         </div>
       </article>
@@ -224,7 +222,7 @@
         </div>
       </div>
     {:else}
-      <p class="empty">Watchface not found.</p>
+      <p class="empty">{$t.notFound}</p>
     {/if}
   </div>
 </Page>
