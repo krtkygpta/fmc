@@ -2,18 +2,15 @@
   // The privacy policy of the site and of FMC Companion, which links here from the App Store and TestFlight.
   // The same text is companion's PRIVACY.md (github.com/fmctools/companion); change both together.
   import { marked } from "marked";
-  import source from "./privacy.md?raw";
+  import { t } from "../../i18n";
 
-  // our own file, so {@html} is safe
-  const html = marked.parse(source, { async: false });
+  // our own files, so {@html} is safe
+  const html = $derived(marked.parse($t.privacy, { async: false }));
 </script>
 
 <svelte:head>
-  <title>Privacy — FMC</title>
-  <meta
-    name="description"
-    content="What fmc.tools and the FMC Companion app collect, and what they don't."
-  />
+  <title>{$t.privacyTitle}</title>
+  <meta name="description" content={$t.privacyDescription} />
 </svelte:head>
 
 <div class="page">

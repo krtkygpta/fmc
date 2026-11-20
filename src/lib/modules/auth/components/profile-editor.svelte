@@ -10,6 +10,7 @@
   import { Input } from "$lib/shared/components/input";
   import { Textarea } from "$lib/shared/components/textarea";
   import { profileModel } from "../model";
+  import { t } from "../i18n";
 
   const {
     BIO_MAX,
@@ -25,7 +26,7 @@
   } = profileModel;
 </script>
 
-<AdaptivePopover open={$open} title="Edit profile" onClose={() => profileEditClosed()}>
+<AdaptivePopover open={$open} title={$t.editProfile} onClose={() => profileEditClosed()}>
   <form
     onsubmit={(e) => {
       e.preventDefault();
@@ -37,7 +38,7 @@
       <div class="avatar-actions">
         <label class="pick type-subtitle">
           <Icon name="photo_camera" size={18} />
-          Change photo
+          {$t.changePhoto}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif"
@@ -50,12 +51,14 @@
           />
         </label>
         {#if $avatarSrc}
-          <Button kind="ghost" onClick={() => profileFormPatched({ avatar: null })}>Remove</Button>
+          <Button kind="ghost" onClick={() => profileFormPatched({ avatar: null })}
+            >{$t.remove}</Button
+          >
         {/if}
       </div>
     </div>
 
-    <Field label="Name">
+    <Field label={$t.name}>
       <Input
         value={$form.name}
         required
@@ -63,12 +66,12 @@
         onInput={(name) => profileFormPatched({ name })}
       />
     </Field>
-    <Field label="Bio" hint="{$form.bio.length} / {BIO_MAX}">
+    <Field label={$t.bio} hint="{$form.bio.length} / {BIO_MAX}">
       <Textarea
         value={$form.bio}
         rows={4}
         maxlength={BIO_MAX}
-        placeholder="A line or two about you and your faces"
+        placeholder={$t.bioPlaceholder}
         onInput={(bio) => profileFormPatched({ bio })}
       />
     </Field>
@@ -76,9 +79,9 @@
     {#if $err}<Text as="p" variant="caption" tone="error">{$err}</Text>{/if}
 
     <div class="actions">
-      <Button kind="ghost" onClick={() => profileEditClosed()}>Cancel</Button>
+      <Button kind="ghost" onClick={() => profileEditClosed()}>{$t.cancel}</Button>
       <Button type="submit" disabled={!$ready || $saving}>
-        {$saving ? "Saving…" : "Save"}
+        {$saving ? $t.saving : $t.save}
       </Button>
     </div>
   </form>

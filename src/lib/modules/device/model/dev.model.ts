@@ -2,11 +2,12 @@
 // .wp2app, or an OTA firmware image — onto the watch straight from disk, through the same gates as the store (planInstall for a package,
 // checkOtaTarget + the battery floor for an image). The file is held as a handle, not as bytes:
 // "Install again" after a rebuild reads the file anew, no second pick.
-import { createEffect, createEvent, createStore, sample } from "effector";
+import { attach, createEffect, createEvent, createStore, sample } from "effector";
 import { reset } from "patronum";
 import { inspectOtaImage, OTA_DEVICE } from "../lib/ota-image";
 import { parsePackageHeader } from "../lib/wp2";
 import * as ble from "./ble.model";
+import { t } from "../i18n";
 
 export interface LocalBuild {
   name: string;
@@ -40,17 +41,20 @@ export function sniff(d: Uint8Array): Pick<LocalBuild, "kind" | "what"> {
 // Chromium only, like Web Bluetooth itself, and not in TS's DOM lib yet
 type Picker = (o: object) => Promise<FileSystemFileHandle[]>;
 
-const pickFx = createEffect(async () => {
-  const [h] = await (window as unknown as { showOpenFilePicker: Picker }).showOpenFilePicker({
-    types: [
-      {
-        description: "App package or firmware image",
-        accept: { "application/octet-stream": [".wp2app", ".bin"] },
-      },
-    ],
-  });
+const pickFx = attach({
+  source: t,
+  effect: async (t) => {
+    const [h] = await (window as unknown as { showOpenFilePicker: Picker }).showOpenFilePicker({
+      types: [
+        {
+          description: t.filePickerDesc,
+          accept: { "application/octet-stream": [".wp2app", ".bin"] },
+        },
+      ],
+    });
 
-  return h;
+    return h;
+  },
 });
 const readFx = createEffect(
   async ({ handle }: { handle: FileSystemFileHandle; install: boolean }) => {

@@ -2,6 +2,7 @@
   import { Card } from "$lib/shared/components/card";
   import LoginForm from "../components/login-form.svelte";
   import { authModel } from "../model";
+  import { t } from "../i18n";
   import { goto } from "$app/navigation";
   import { Select } from "$lib/shared/components/select";
   import { i18nModel, LOCALES } from "$lib/shared/i18n";
@@ -17,11 +18,11 @@
   });
 </script>
 
-<svelte:head><title>Sign in — FMC Watchfaces</title></svelte:head>
+<svelte:head><title>{$t.loginTitle}</title></svelte:head>
 
 <div class="wrapper">
   <div class="panel">
-    <h1 class="type-title">Welcome back</h1>
+    <h1 class="type-title">{$t.welcomeBack}</h1>
     <Card>
       <LoginForm />
     </Card>

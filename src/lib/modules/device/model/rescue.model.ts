@@ -1,9 +1,10 @@
 // The /rescue page: a watch that is alive on Bluetooth but stuck on a black screen after a bad
 // face gets one command — factory reset — the moment auth completes. Nothing else is asked of
 // it, because a wedged firmware may never answer the usual info/dial-list exchange.
-import { createEffect, createEvent, createStore, sample } from "effector";
+import { attach, createEvent, createStore, sample } from "effector";
 import { Watch } from "../lib/ble";
 import { dbgListeners } from "../lib/ble-protocol";
+import { t } from "../i18n";
 
 export const resetRequested = createEvent();
 export const $status = createStore("");
@@ -14,17 +15,20 @@ export const $log = createStore<string[]>([]);
 
 const statusChanged = createEvent<string>();
 const logged = createEvent<string>();
-const resetFx = createEffect(async () => {
-  const w = new Watch((s: string) => statusChanged(s));
+const resetFx = attach({
+  source: t,
+  effect: async (t) => {
+    const w = new Watch((s: string) => statusChanged(s));
 
-  dbgListeners.add(logged);
-  try {
-    await w.connect({ rescue: true });
-    statusChanged("sending factory reset…");
-    await w.factoryReset();
-  } finally {
-    dbgListeners.delete(logged);
-  }
+    dbgListeners.add(logged);
+    try {
+      await w.connect({ rescue: true });
+      statusChanged(t.sendingReset);
+      await w.factoryReset();
+    } finally {
+      dbgListeners.delete(logged);
+    }
+  },
 });
 
 export const $busy = resetFx.pending;

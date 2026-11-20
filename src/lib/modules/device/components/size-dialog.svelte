@@ -4,19 +4,16 @@
   import { Button } from "$lib/shared/components/button";
   import { Dialog } from "$lib/shared/components/dialog";
   import { bleModel } from "../model";
+  import { t } from "../i18n";
 
   const { $sizeWarning: warning, sizeConfirmed, sizeWarningClosed } = bleModel;
 </script>
 
-<Dialog
-  open={$warning !== null}
-  title="This face may be too big for the watch"
-  onClose={() => sizeWarningClosed()}
->
+<Dialog open={$warning !== null} title={$t.tooBig} onClose={() => sizeWarningClosed()}>
   <p class="desc">{$warning}</p>
   {#snippet actions()}
-    <Button kind="secondary" onClick={() => sizeWarningClosed()}>Cancel</Button>
-    <Button kind="danger" onClick={() => sizeConfirmed()}>Install anyway</Button>
+    <Button kind="secondary" onClick={() => sizeWarningClosed()}>{$t.cancel}</Button>
+    <Button kind="danger" onClick={() => sizeConfirmed()}>{$t.installAnyway}</Button>
   {/snippet}
 </Dialog>
 

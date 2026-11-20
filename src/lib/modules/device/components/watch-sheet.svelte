@@ -13,6 +13,7 @@
   import { capacityOf } from "../lib/ble";
   import WatchSelector from "./watch-selector.svelte";
   import DevSheet from "./dev-sheet.svelte";
+  import { t } from "../i18n";
 
   interface Props {
     trigger: Snippet<[{ open: boolean; toggle: () => void; connected: boolean }]>;
@@ -77,24 +78,22 @@
 
 <AdaptivePopover
   {open}
-  title={$bleInfo ? ($bleInfo.name ?? "CMF Watch") : "Connect your watch"}
+  title={$bleInfo ? ($bleInfo.name ?? "CMF Watch") : $t.connectYourWatch}
   {onClose}
 >
   {#if !$bleInfo}
     <div class="section">
-      <p class="desc type-small">CMF Watch Pro 2 / Pro 3 over Web Bluetooth.</p>
+      <p class="desc type-small">{$t.overWebBluetooth}</p>
       <!-- the two things to do here, half the width each -->
       <div class="cta">
         <Button onClick={() => connectRequested()} disabled={$connecting}>
           <Icon name="bluetooth" size={22} />
-          {$connecting ? "Connecting…" : "Connect"}
+          {$connecting ? $t.connecting : $t.connect}
         </Button>
-        <span
-          title="Clear Chrome's device permission and the saved auth key — does not affect pairing state on the watch itself"
-        >
+        <span title={$t.forgetHint}>
           <Button kind="secondary" onClick={() => forgetRequested()} disabled={$forgetting}>
             <Icon name="ink_eraser" size={20} />
-            {$forgetting ? "Forgetting…" : "Forget device"}
+            {$forgetting ? $t.forgetting : $t.forgetDevice}
           </Button>
         </span>
       </div>
@@ -109,35 +108,26 @@
         <details class="before">
           <summary class="item type-body">
             <Icon name="info" size={20} />
-            Before you connect
+            {$t.beforeYouConnect}
           </summary>
           <div class="notes type-small">
             <ul>
+              <li>{$t.noteOneApp}</li>
+              <li>{$t.noteInstaller}</li>
               <li>
-                The watch talks to one app at a time. Close Nothing X before you connect, and close
-                this tab when you're done.
-              </li>
-              <li>
-                Watchfaces go through the watch's own installer, and the watch can refuse them.
-              </li>
-              <li>
-                On an iPhone, use <a href={BLUEFY} target="_blank" rel="noopener noreferrer"
+                {$t.noteIphoneBefore}<a href={BLUEFY} target="_blank" rel="noopener noreferrer"
                   >Bluefy</a
-                >, and first swipe away every app that holds the watch, like Nothing X or a fitness
-                app. In Settings → Bluetooth the watch should read Not Connected.
+                >{$t.noteIphoneAfter}
               </li>
-              <li>
-                If Nothing X loses the watch afterwards, pair it again. Turn Bluetooth off and on,
-                forget the watch, add it back.
-              </li>
+              <li>{$t.noteNothingX}</li>
             </ul>
-            <a href="/help" onclick={onClose}>Read the full notes</a>
+            <a href="/help" onclick={onClose}>{$t.readFullNotes}</a>
           </div>
         </details>
         {#if $log.length}
           <button type="button" class="item type-body" onclick={copyLog}>
             <Icon name="content_copy" size={20} />
-            Copy log
+            {$t.copyLog}
           </button>
         {/if}
       </div>
@@ -153,23 +143,24 @@
       <dl class="info">
         <div>
           <dt class="type-label">
-            <Icon name="battery_full" size={16} color="var(--color-accent)" /> Battery
+            <Icon name="battery_full" size={16} color="var(--color-accent)" />
+            {$t.battery}
           </dt>
           <dd class="type-small type-mono">{$bleInfo.battery ?? "?"}%</dd>
         </div>
         <div>
-          <dt class="type-label"><Icon name="memory" size={16} color={muted} /> Firmware</dt>
+          <dt class="type-label"><Icon name="memory" size={16} color={muted} /> {$t.firmware}</dt>
           <dd class="type-small type-mono">{$bleInfo.firmware ?? "?"}</dd>
         </div>
         <div>
-          <dt class="type-label"><Icon name="tag" size={16} color={muted} /> Serial</dt>
+          <dt class="type-label"><Icon name="tag" size={16} color={muted} /> {$t.serial}</dt>
           <dd class="type-small type-mono">{$bleInfo.serial ?? "?"}</dd>
         </div>
       </dl>
       <div class="row">
         <Button kind="ghost" onClick={openDev}>
           <Icon name="code" size={20} />
-          Developer
+          {$t.developer}
         </Button>
       </div>
     </div>
@@ -177,8 +168,10 @@
     {#if $dials}
       <div class="section">
         <h2 class="title type-heading">
-          Watchfaces on the watch ({$slots?.used ?? $dials.length} of {$slots?.capacity ??
-            capacityOf($bleInfo.name)})
+          {$t.watchfacesOnWatch(
+            $slots?.used ?? $dials.length,
+            $slots?.capacity ?? capacityOf($bleInfo.name),
+          )}
         </h2>
         <div class="badges">
           {#each $dials as id, i (id)}
@@ -191,7 +184,7 @@
                 : undefined}
             />
           {:else}
-            <span class="none type-caption">the watch reported none</span>
+            <span class="none type-caption">{$t.reportedNone}</span>
           {/each}
         </div>
       </div>
@@ -200,7 +193,7 @@
   <div class="list companion">
     <a class="item type-body" href="/companion" onclick={onClose}>
       <Icon name="smartphone" size={20} />
-      FMC Companion mobile app
+      {$t.companionApp}
       <Icon name="chevron_right" size={20} class="go" />
     </a>
   </div>

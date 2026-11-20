@@ -3,6 +3,7 @@
   // otherwise a blank dial with the label doing the work. Picking is optional — the popover
   // only lists them, the slot dialog picks one to overwrite.
   import { Icon } from "$lib/shared/components/icon";
+  import { t } from "../i18n";
 
   interface Props {
     name: string;
@@ -42,8 +43,8 @@
     <button
       type="button"
       class="remove"
-      aria-label="Remove {name} from this list"
-      title="Deleted it on the watch? FMC can't see that. Remove it from this list."
+      aria-label={$t.removeFromList(name)}
+      title={$t.removeHint}
       onclick={onRemove}
     >
       <Icon name="close" size={14} />

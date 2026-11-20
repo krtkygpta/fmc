@@ -7,6 +7,7 @@
   import { Checkbox } from "$lib/shared/components/checkbox";
   import { Icon } from "$lib/shared/components/icon";
   import { bleModel, devModel } from "../model";
+  import { t } from "../i18n";
 
   const {
     $open: open,
@@ -41,15 +42,15 @@
   const time = (ms: number) => new Date(ms).toLocaleTimeString();
 </script>
 
-<AdaptivePopover open={$open} title="Developer" onClose={() => panelClosed()}>
+<AdaptivePopover open={$open} title={$t.developer} onClose={() => panelClosed()}>
   <div class="section">
-    <h2 class="title type-heading">On the watch</h2>
+    <h2 class="title type-heading">{$t.onTheWatch}</h2>
     {#if !$watch}
-      <p class="desc type-caption">Connect the watch first.</p>
+      <p class="desc type-caption">{$t.connectFirst}</p>
     {:else if $wp2Reading}
-      <p class="desc type-caption">Checking the watch…</p>
+      <p class="desc type-caption">{$t.checkingWatch}</p>
     {:else if $wp2 === "stock"}
-      <p class="desc type-caption">Stock firmware — no App Loader stub, apps can't go on.</p>
+      <p class="desc type-caption">{$t.stockNoStub}</p>
     {:else if $wp2}
       <dl class="info">
         <div>
@@ -66,7 +67,7 @@
         </div>
         {#each apps as [slot, app] (slot)}
           <div>
-            <dt class="type-label">Slot {slot}</dt>
+            <dt class="type-label">{$t.slot(slot)}</dt>
             <dd class="type-small type-mono">
               {app.name} v{app.version} · {app.crc.toString(16).padStart(8, "0")}
             </dd>
@@ -77,15 +78,12 @@
   </div>
 
   <div class="section">
-    <h2 class="title type-heading">Local build</h2>
-    <p class="desc type-caption">
-      An app or App Loader .wp2app, or a firmware image, from your disk — through the same checks as
-      the store. After a rebuild, Install again sends the new file.
-    </p>
+    <h2 class="title type-heading">{$t.localBuild}</h2>
+    <p class="desc type-caption">{$t.localBuildDesc}</p>
     <div class="row">
       <Button kind="secondary" onClick={() => pickRequested()} disabled={busy}>
         <Icon name="folder_open" size={22} />
-        {$build ? "Another file" : "Pick a file"}
+        {$build ? $t.anotherFile : $t.pickFile}
       </Button>
       {#if $build}
         <Button
@@ -93,7 +91,7 @@
           disabled={!$watch || busy || (firmware && !$riskAccepted)}
         >
           <Icon name={firmware ? "bolt" : "install_desktop"} size={22} />
-          {$installed || $otaResult ? "Install again" : "Install"}
+          {$installed || $otaResult ? $t.installAgain : $t.install}
         </Button>
       {/if}
     </div>
@@ -102,20 +100,17 @@
       <p class="file">
         <strong>{$build.name}</strong> — {$build.what}
         <span class="desc type-caption"
-          >{($build.size / 1024).toFixed(1)} KB, modified {time($build.modified)}</span
+          >{$t.fileMeta(($build.size / 1024).toFixed(1), time($build.modified))}</span
         >
       </p>
       {#if firmware}
         <div class="disclaimer" role="note">
           <Icon name="warning" size={20} />
-          <span>
-            A firmware image can brick the watch. Battery at 50% or more, on the charger, tab open
-            until it's done.
-          </span>
+          <span>{$t.firmwareRisk}</span>
         </div>
         <label class="accept">
           <Checkbox checked={$riskAccepted} onChange={(v) => riskAcceptedSet(v)} />
-          <span>I accept the risk</span>
+          <span>{$t.acceptRisk}</span>
         </label>
       {/if}
     {/if}
@@ -123,18 +118,19 @@
     {#if $installing || $flashing}
       <div class="progress">
         <div class="progress-row type-caption">
-          <span>Installing on the watch</span>
+          <span>{$t.installingOnWatch}</span>
           <span class="pct type-mono">{pct}%</span>
         </div>
         <progress max="100" value={pct}></progress>
       </div>
     {/if}
     {#if $installed}
-      <p class="ok"><Icon name="check_circle" size={20} /> {$installed} is on the watch.</p>
+      <p class="ok"><Icon name="check_circle" size={20} /> {$t.isOnWatch($installed)}</p>
     {/if}
     {#if $otaResult === "done"}
       <p class="ok">
-        <Icon name="check_circle" size={20} /> Sent. The watch installs it and restarts.
+        <Icon name="check_circle" size={20} />
+        {$t.sentRestarts}
       </p>
     {/if}
     {#if error}<p class="err">{error}</p>{/if}

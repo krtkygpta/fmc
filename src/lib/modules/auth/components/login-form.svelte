@@ -4,6 +4,7 @@
   import { Field } from "$lib/shared/components/field";
   import { Input } from "$lib/shared/components/input";
   import { authModel } from "../model";
+  import { t } from "../i18n";
 
   const {
     loginRequested,
@@ -28,10 +29,10 @@
         d="M12 2a9.96 9.96 0 0 1 6.29 2.226a1 1 0 0 1 .04 1.52l-1.51 1.362a1 1 0 0 1 -1.265 .06a6 6 0 1 0 2.103 6.836l.001 -.004h-3.66a1 1 0 0 1 -.992 -.883l-.007 -.117v-2a1 1 0 0 1 1 -1h6.945a1 1 0 0 1 .994 .89c.04 .367 .061 .737 .061 1.11c0 5.523 -4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10z"
       />
     </svg>
-    Login with Google
+    {$t.loginWithGoogle}
   </Button>
-  <div class="divider"><span class="type-label">Or continue with</span></div>
-  <Field label="Email">
+  <div class="divider"><span class="type-label">{$t.orContinueWith}</span></div>
+  <Field label={$t.email}>
     <Input
       type="email"
       placeholder="m@example.com"
@@ -41,7 +42,7 @@
       onInput={(email) => loginFormPatched({ email })}
     />
   </Field>
-  <Field label="Password">
+  <Field label={$t.password}>
     <Input
       type="password"
       required
@@ -54,8 +55,8 @@
   {#if $err}
     <Text as="p" variant="caption" tone="error">{$err}</Text>
   {/if}
-  <Button type="submit" kind="primary" disabled={$busy}>Login</Button>
-  <p class="link type-caption">Don't have an account? <a href="/register">Sign up</a></p>
+  <Button type="submit" kind="primary" disabled={$busy}>{$t.login}</Button>
+  <p class="link type-caption">{$t.noAccount} <a href="/register">{$t.signUp}</a></p>
 </form>
 
 <style>

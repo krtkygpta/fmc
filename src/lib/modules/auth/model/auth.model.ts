@@ -4,6 +4,7 @@ import { reset } from "patronum";
 import type { AuthRecord } from "pocketbase";
 import { pb, pbErrorMessage } from "$lib/shared/api";
 import * as authApi from "./auth.api";
+import { t } from "../i18n";
 
 export type LoginForm = { email: string; password: string };
 export type SignupForm = { name: string; email: string; password: string; confirm: string };
@@ -82,7 +83,8 @@ sample({
 });
 sample({
   clock: authApi.oauthFx.failData,
-  fn: (e: Error) => `login: ${e.message}`,
+  source: t,
+  fn: (t, e: Error) => t.loginFailed(e.message),
   target: $loginErr,
 });
 
@@ -91,8 +93,8 @@ const passwordsMatch = (f: SignupForm) => f.password === f.confirm;
 
 sample({
   clock: registerRequested,
-  source: $signupForm,
-  fn: (f) => (passwordsMatch(f) ? "" : "Passwords do not match."),
+  source: { f: $signupForm, t },
+  fn: ({ f, t }) => (passwordsMatch(f) ? "" : t.passwordsMismatch),
   target: $registerErr,
 });
 sample({
