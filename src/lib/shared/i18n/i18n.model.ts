@@ -49,8 +49,15 @@ const applyLocaleFx = createEffect((locale: Locale) => {
 });
 
 // ---- business logic ----
-sample({ clock: localePicked, filter: isLocale, target: $locale });
-sample({ clock: $locale, target: applyLocaleFx });
+sample({
+  clock: localePicked,
+  filter: isLocale,
+  target: $locale,
+});
+sample({
+  clock: $locale,
+  target: applyLocaleFx,
+});
 
 if (typeof document !== "undefined") document.documentElement.lang = $locale.defaultState;
 
@@ -64,6 +71,7 @@ export const dict = <T extends Record<string, unknown>>(
   rest: Record<Exclude<Locale, "en">, NoInfer<T>>,
 ) => {
   const all: Record<Locale, T> = { en, ...rest };
+
   return $locale.map((l) => all[l]);
 };
 
@@ -75,6 +83,7 @@ export const plural = (
   forms: Partial<Record<Intl.LDMLPluralRule, string>> & { other?: string },
 ): string => {
   let r = rules.get(locale);
+
   if (!r) rules.set(locale, (r = new Intl.PluralRules(locale)));
   return forms[r.select(n)] ?? forms.other ?? forms.many ?? forms.one ?? "";
 };
