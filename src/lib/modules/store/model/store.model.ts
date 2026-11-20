@@ -3,13 +3,20 @@
 // Two shelves with the same life: a list fetched once per session, and one record behind a
 // detail page. The detail page is a deep link, so it always asks for its record; when the list
 // is already here it shows that copy first and the fetch only refreshes it.
-import { combine, createEvent, createStore, sample, type Effect } from "effector";
+import { combine, createEvent, createStore, sample, type Effect, type StoreValue } from "effector";
 import { samePackage, type Wp2Package, type Wp2State } from "$lib/modules/device/lib/wp2";
 import type { RecordModel } from "pocketbase";
 import { bleModel } from "$lib/modules/device/model";
 import { flashable, isLoader, recordDevice } from "../lib/firmware";
 import { watchDevice } from "$lib/modules/device/lib/ota-image";
 import * as storeApi from "./store.api";
+import { t } from "../i18n";
+
+type StoreDict = StoreValue<typeof t>;
+
+// a failed download in the reader's language; anything else (offline, a bad package) as it came
+const fetchErrText = (dict: StoreDict, e: Error) =>
+  e instanceof storeApi.FetchError ? dict.downloadFailed(e.status) : e.message;
 
 export { appDownloadUrl, firmwareDownloadUrl } from "./store.api";
 
@@ -154,7 +161,8 @@ sample({
 });
 sample({
   clock: [storeApi.fetchFirmwareImageFx.failData, storeApi.saveFirmwareImageFx.failData],
-  fn: (e) => e.message,
+  source: t,
+  fn: fetchErrText,
   target: $imageErr,
 });
 sample({
@@ -305,7 +313,8 @@ sample({
 });
 sample({
   clock: [storeApi.fetchAppPackageFx.failData, storeApi.fetchLoaderPackageFx.failData],
-  fn: (e) => e.message,
+  source: t,
+  fn: fetchErrText,
   target: $imageErr,
 });
 sample({

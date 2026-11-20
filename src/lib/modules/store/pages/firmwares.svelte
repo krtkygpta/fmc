@@ -13,11 +13,12 @@
     firmwareKind,
     flashable,
     recordDevice,
-    testedLabel,
+    testedKey,
     testedOnHardware,
   } from "../lib/firmware";
   import { FLASH_LIMITS } from "../lib/links";
   import { storeModel } from "../model";
+  import { t } from "../i18n";
 
   const {
     $firmwares: firmwares,
@@ -30,7 +31,7 @@
   firmwaresRequested();
 </script>
 
-<svelte:head><title>Firmware for CMF watches — FMC</title></svelte:head>
+<svelte:head><title>{$t.firmwaresTitle}</title></svelte:head>
 
 <Page>
   {#snippet header()}
@@ -42,10 +43,9 @@
     <a class="risk" href={FLASH_LIMITS} target="_blank" rel="noopener noreferrer">
       <Icon name="warning" size={24} />
       <span class="text">
-        <span class="title type-subtitle">Firmware can brick a watch</span>
+        <span class="title type-subtitle">{$t.riskTitle}</span>
         <span class="desc type-small">
-          These images are unofficial and recovery isn't guaranteed. Read the limits before you
-          flash anything.
+          {$t.riskDesc}
         </span>
       </span>
       <Icon name="open_in_new" size={20} class="go" />
@@ -66,6 +66,7 @@
         {#each $firmwares as fw (fw.id)}
           {@const kind = firmwareKind(fw.kind)}
           {@const ota = flashable(fw.device)}
+          {@const tested = testedKey(fw.tested)}
           <li>
             <a class="card" href="/firmware/{fw.id}">
               <div class="cover" class:bare={!fw.cover}>
@@ -83,18 +84,18 @@
                 </div>
                 {#if fw.summary}<p class="desc type-small">{fw.summary}</p>{/if}
                 <div class="badges">
-                  {#if !fw.published}<Badge warn>Draft</Badge>{/if}
+                  {#if !fw.published}<Badge warn>{$t.draft}</Badge>{/if}
                   {#if $onWatch[fw.id] === "update"}
-                    <Badge>Update</Badge>
+                    <Badge>{$t.updateBadge}</Badge>
                   {:else if $onWatch[fw.id] === "installed"}
-                    <Badge quiet>Installed</Badge>
+                    <Badge quiet>{$t.installed}</Badge>
                   {/if}
                   <Badge quiet={ota} warn={!ota}>{deviceLabel(recordDevice(fw.device))}</Badge>
-                  <Badge quiet>{kind.label}</Badge>
-                  {#if testedLabel(fw.tested)}
+                  <Badge quiet>{$t.kinds[kind.key].label}</Badge>
+                  {#if tested}
                     <Badge quiet={testedOnHardware(fw.tested)} warn={!testedOnHardware(fw.tested)}>
                       <Icon name={testedOnHardware(fw.tested) ? "verified" : "warning"} size={14} />
-                      {testedLabel(fw.tested)}
+                      {$t.tested[tested]}
                     </Badge>
                   {/if}
                 </div>
@@ -102,7 +103,7 @@
             </a>
           </li>
         {:else}
-          <li class="empty">No firmware yet.</li>
+          <li class="empty">{$t.noFirmware}</li>
         {/each}
       {/if}
     </ul>

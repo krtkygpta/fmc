@@ -19,11 +19,12 @@
     flashable,
     isLoader,
     recordDevice,
-    testedLabel,
+    testedKey,
     testedOnHardware,
   } from "../lib/firmware";
   import { FLASH_LIMITS, WATCH_UTILS_DOCS } from "../lib/links";
   import { storeModel } from "../model";
+  import { t } from "../i18n";
 
   interface Props {
     id: string;
@@ -80,6 +81,7 @@
   const fw = $derived($firmware);
   const kind = $derived(firmwareKind(fw?.kind));
   const onHardware = $derived(testedOnHardware(fw?.tested));
+  const tested = $derived(testedKey(fw?.tested));
   const device = $derived(recordDevice(fw?.device));
   const deviceName = $derived(DEVICES.find((d) => d.value === device)?.label ?? device);
   // another watch's image: FMC only downloads it, the Install button isn't there to press
@@ -87,14 +89,14 @@
   const stats = $derived(
     fw
       ? [
-          ...(fw.version ? [{ label: "Version", value: fw.version }] : []),
-          { label: "Downloads", value: compact(fw.downloads) },
+          ...(fw.version ? [{ label: $t.version, value: fw.version }] : []),
+          { label: $t.downloads, value: compact(fw.downloads) },
         ]
       : [],
   );
 </script>
 
-<svelte:head><title>{fw?.name ?? "Firmware"} — firmware for the {deviceName}</title></svelte:head>
+<svelte:head><title>{$t.firmwareTitle(fw?.name, deviceName)}</title></svelte:head>
 
 <Page>
   <div class="detail">
@@ -113,12 +115,12 @@
         <h1 class="type-display">{fw.name}</h1>
         {#if fw.summary}<p class="summary">{fw.summary}</p>{/if}
         <div class="badges">
-          {#if !fw.published}<Badge warn>Draft</Badge>{/if}
-          <Badge quiet>{kind.label}</Badge>
-          {#if testedLabel(fw.tested)}
+          {#if !fw.published}<Badge warn>{$t.draft}</Badge>{/if}
+          <Badge quiet>{$t.kinds[kind.key].label}</Badge>
+          {#if tested}
             <Badge quiet={onHardware} warn={!onHardware}>
               <Icon name={onHardware ? "verified" : "warning"} size={14} />
-              {testedLabel(fw.tested)}
+              {$t.tested[tested]}
             </Badge>
           {/if}
           {#if deviceLabel(device)}<Badge quiet={ota} warn={!ota}>{deviceLabel(device)}</Badge>{/if}
@@ -134,28 +136,26 @@
           <div class="disclaimer device type-subtitle" role="note">
             <Icon name="block" size={20} />
             <span>
-              Only for the {deviceName}. FMC installs firmware on a Watch Pro 2 only, so this one is
-              a download — and flashing it onto a Watch Pro 2 can brick it.
+              {$t.onlyFor(deviceName)}
             </span>
           </div>
         {/if}
         {#if $wrongWatch}
           <p class="err" role="alert">
-            The connected watch is “{$watch?.name ?? "unnamed"}”, and this firmware is for the
-            {deviceName}. It can't be installed on this watch from here — download only.
+            {$t.wrongWatch($watch?.name ?? $t.unnamed, deviceName)}
           </p>
         {/if}
         <div class="disclaimer" role="note">
           <Icon name="warning" size={20} />
           <span>
-            You install it at your own risk. FMC takes no responsibility for your watch.
+            {$t.ownRisk}
           </span>
         </div>
 
         {#if fw.image}
           <label class="accept">
             <Checkbox checked={$riskAccepted} onChange={(v) => riskAcceptedSet(v)} />
-            <span>I accept the risk</span>
+            <span>{$t.acceptRisk}</span>
           </label>
         {/if}
 
@@ -167,14 +167,14 @@
             disabled={!fw.image || !$riskAccepted || busy}
           >
             <Icon name="download" size={22} />
-            Download
+            {$t.download}
           </Button>
           {#if !ota}
             <!-- no Install, no Connect: nothing on this page can send it to a watch -->
           {:else if !$watch}
             <Button size="large" onClick={() => connectRequested()} disabled={$connecting}>
               <Icon name="bluetooth" size={22} />
-              {$connecting ? "Connecting…" : "Connect"}
+              {$connecting ? $t.connecting : $t.connect}
             </Button>
           {:else}
             <Button
@@ -183,7 +183,7 @@
               disabled={!fw.image || !$riskAccepted || busy || done || $wrongWatch}
             >
               <Icon name="bolt" size={22} />
-              Install
+              {$t.install}
             </Button>
           {/if}
         </div>
@@ -191,23 +191,26 @@
         {#if $imageProgress !== null || $flashing || $installing}
           <div class="progress">
             <div class="progress-row type-caption">
-              <span>{$imageProgress !== null ? "Downloading" : "Installing on the watch"}</span>
+              <span>{$imageProgress !== null ? $t.downloading : $t.installingOnWatch}</span>
               <span class="pct type-mono">{pct}%</span>
             </div>
             <progress max="100" value={pct}></progress>
             {#if $flashing}<p class="muted type-caption">
-                Keep this tab open and the watch close.
+                {$t.keepTabOpen}
               </p>{/if}
           </div>
         {/if}
 
         {#if $installed}
-          <p class="ok"><Icon name="check_circle" size={20} /> Installed on the watch.</p>
+          <p class="ok">
+            <Icon name="check_circle" size={20} />
+            {$t.installedOnTheWatch}
+          </p>
         {/if}
         {#if $result === "done"}
           <p class="ok">
-            <Icon name="check_circle" size={20} /> Sent. The watch installs it and restarts — leave it
-            on the charger.
+            <Icon name="check_circle" size={20} />
+            {$t.sent}
           </p>
         {/if}
         {#if error}<p class="err">{error}</p>{/if}
@@ -216,76 +219,75 @@
         <p class="muted state type-caption">
           {#if $watch}
             {#if $wp2Reading}
-              Checking the watch…
+              {$t.checkingWatch}
             {:else if $wp2 === "stock"}
-              Watch: stock firmware.
+              {$t.watchStock}
             {:else if $wp2}
-              Watch: patched firmware (stub {$wp2.stub.version}){#if $wp2.loader}, App Loader v{$wp2
-                  .loader.version}{/if}.
+              {$t.watchPatched($wp2.stub.version, $wp2.loader?.version)}
             {/if}
-            {#if $onWatch === "update"}<Badge>Update available</Badge>{/if}
-            {#if $onWatch === "installed"}<Badge quiet>Installed</Badge>{/if}
+            {#if $onWatch === "update"}<Badge>{$t.updateAvailable}</Badge>{/if}
+            {#if $onWatch === "installed"}<Badge quiet>{$t.installed}</Badge>{/if}
           {/if}
         </p>
       </section>
 
       <details class="more">
-        <summary class="type-subtitle">Details</summary>
+        <summary class="type-subtitle">{$t.details}</summary>
         <div class="more-body">
           {#if loader}
             <p>
-              It goes into its own slot over Bluetooth — no flashing, the firmware stays as it is.
-              Needs the patched firmware on the watch. The CLI way:
+              {$t.loaderHow}
             </p>
             <pre class="type-caption type-mono"><code
                 >wp2apps install loader.wp2app --address &lt;address&gt;</code
               ></pre>
           {:else if ota}
-            <h3 class="type-heading">Before you install</h3>
+            <h3 class="type-heading">{$t.beforeInstall}</h3>
             <ul class="checklist">
-              <li>Watch on its charger, at {OTA_MIN_BATTERY}% or more</li>
-              <li>
-                No other app connected to the watch (Nothing X, a fitness app), so nothing grabs it
-                mid-update
-              </li>
-              <li>This tab open and the screen on, close to the watch</li>
+              <li>{$t.checkCharger(OTA_MIN_BATTERY)}</li>
+              <li>{$t.checkNoApp}</li>
+              <li>{$t.checkTab}</li>
             </ul>
           {/if}
-          {#if kind.hint || fw.base}
+          {#if $t.kinds[kind.key].hint || fw.base}
             <p class="hint">
-              {kind.hint}
-              {#if fw.base}Built on {fw.base}.{/if}
+              {$t.kinds[kind.key].hint}
+              {#if fw.base}{$t.builtOn(fw.base)}{/if}
             </p>
           {/if}
           {#if fw.description}<Prose source={fw.description} />{/if}
           <div class="links">
             {#if fw.source}
               <Button kind="secondary" href={fw.source} external>
-                <Icon name="code" size={20} /> Source
+                <Icon name="code" size={20} />
+                {$t.source}
               </Button>
             {/if}
             {#if fw.demo}
               <Button kind="secondary" href={fw.demo} external>
-                <Icon name="play_circle" size={20} /> Emulator
+                <Icon name="play_circle" size={20} />
+                {$t.emulator}
               </Button>
             {/if}
             {#if fw.video}
               <Button kind="secondary" href={fw.video} external>
-                <Icon name="smart_display" size={20} /> Video
+                <Icon name="smart_display" size={20} />
+                {$t.video}
               </Button>
             {/if}
             <Button kind="secondary" href={WATCH_UTILS_DOCS} external>
-              <Icon name="menu_book" size={20} /> Flashing guide
+              <Icon name="menu_book" size={20} />
+              {$t.flashingGuide}
             </Button>
-            <Button kind="ghost" href={FLASH_LIMITS} external>Limits</Button>
+            <Button kind="ghost" href={FLASH_LIMITS} external>{$t.limits}</Button>
           </div>
         </div>
       </details>
 
       <p class="dates type-caption">
-        {#if fw.author}By {fw.author} ·{/if}
+        {#if fw.author}{$t.by(fw.author)} ·{/if}
         <Icon name="calendar_today" size={14} />
-        Updated {day(fw.updated)}
+        {$t.updated(day(fw.updated))}
       </p>
     {:else if $loading}
       <Skeleton height="12rem" />
@@ -294,7 +296,7 @@
       <Skeleton height="4rem" />
       <Skeleton height="10rem" />
     {:else}
-      <p class="empty">Firmware not found.</p>
+      <p class="empty">{$t.firmwareNotFound}</p>
     {/if}
   </div>
 </Page>
