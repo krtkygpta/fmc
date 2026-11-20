@@ -14,6 +14,7 @@
   import { CreatorShelf } from "../components/creator-shelf";
   import { DEVICES, matchesDevice } from "../lib/devices";
   import CompanionPromo from "$lib/modules/store/components/companion-promo.svelte";
+  import { t } from "../i18n";
 
   const { $user: user } = authModel;
   const {
@@ -52,21 +53,21 @@
     if (mine && uid) myLoadRequested(uid);
   });
 
-  const SORT_OPTIONS = [
+  const SORT_OPTIONS = $derived([
     // not a sort of the grid: it swaps the grid for a shelf of creators over the thresholds in
     // lib/top-creators, each with a horizontal rail of their faces
-    { value: "creators", label: "Top creators", short: "Top creators" },
-    { value: "new", label: "Newest" },
-    { value: "popular", label: "Popular" },
-    { value: "downloads", label: "Most downloaded" },
-  ];
+    { value: "creators", label: $t.topCreators },
+    { value: "new", label: $t.newest },
+    { value: "popular", label: $t.popular },
+    { value: "downloads", label: $t.mostDownloaded },
+  ]);
 
   // "" — every watch. The shelf is mostly Watch 3 Pro faces right now, so a Watch Pro 2 owner
   // needs a way to see their own watch's faces without us moving or hiding anyone's work.
-  const DEVICE_OPTIONS = [
-    { value: "", label: "All devices" },
+  const DEVICE_OPTIONS = $derived([
+    { value: "", label: $t.allDevices },
     ...DEVICES.map((d) => ({ value: d.value, label: d.label, short: d.short })),
-  ];
+  ]);
 
   const likeCount = (id: string) => $likes.filter((l) => l.watchface === id).length;
   const likedIds = $derived(new Set($likes.filter((l) => l.user === uid).map((l) => l.watchface)));
@@ -78,25 +79,28 @@
     ...($user
       ? [
           {
-            name: "Show",
+            id: "shelf",
+            name: $t.show,
             value: tab,
             options: [
-              { value: "all", label: "Everyone's" },
-              { value: "mine", label: "Mine" },
-              { value: "liked", label: "Liked" },
+              { value: "all", label: $t.everyones },
+              { value: "mine", label: $t.mine },
+              { value: "liked", label: $t.liked },
             ],
             pick: (value: string) => marketFilterPicked({ key: "shelf", value }),
           },
         ]
       : []),
     {
-      name: "Device",
+      id: "device",
+      name: $t.device,
       value: $marketView.device,
       options: DEVICE_OPTIONS,
       pick: (value: string) => marketFilterPicked({ key: "device", value }),
     },
     {
-      name: "Sort",
+      id: "sort",
+      name: $t.sort,
       value: $marketView.sort,
       options: SORT_OPTIONS,
       pick: (value: string) => marketFilterPicked({ key: "sort", value }),
@@ -104,7 +108,7 @@
   ]);
   // which of them is open in the menu; null — the list of filters itself
   let pane = $state<string | null>(null);
-  const current = $derived(filters.find((f) => f.name === pane));
+  const current = $derived(filters.find((f) => f.id === pane));
 
   // the filter button carries a dot while the shelf isn't the default one
   const filtered = $derived(
@@ -193,8 +197,8 @@
             type="button"
             class="filter"
             class:open
-            title="Filters"
-            aria-label="Filters"
+            title={$t.filters}
+            aria-label={$t.filters}
             onclick={() => {
               pane = null;
               toggle();
@@ -218,8 +222,8 @@
                 >
               {/each}
             {:else}
-              {#each filters as f (f.name)}
-                <MenuItem stay onClick={() => (pane = f.name)}>
+              {#each filters as f (f.id)}
+                <MenuItem stay onClick={() => (pane = f.id)}>
                   <span class="filter-name">{f.name}</span>
                   <span class="filter-value"
                     >{f.options.find((o) => o.value === f.value)?.label}</span
@@ -249,11 +253,7 @@
         loading={mine ? $myLoading : $marketLoading}
         manage={mine}
         showAuthor={!mine}
-        empty={mine
-          ? "Nothing here yet — create a watchface in the editor and hit Save."
-          : liked
-            ? "You haven't liked anything yet — tap the heart on a watchface to keep it here."
-            : "No community watchfaces yet — publish yours from the editor."}
+        empty={mine ? $t.emptyMine : liked ? $t.emptyLiked : $t.emptyAll}
         onMore={$marketView.visibleCount < shown.length
           ? () =>
               marketViewPatched({

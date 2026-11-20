@@ -7,6 +7,7 @@
   import { Avatar } from "$lib/shared/components/avatar";
   import { compact } from "$lib/shared/lib/format";
   import { deviceLabel } from "../../lib/devices";
+  import { t } from "../../i18n";
 
   interface Props {
     wf: RecordModel;
@@ -55,13 +56,13 @@
      them fit side by side on a phone. The whole card opens the face (.open-link is stretched
      under everything); the author, the like and the menu sit above it. -->
 <article class="card">
-  <a class="open-link" {href} aria-label="Open {wf.name}"></a>
+  <a class="open-link" {href} aria-label={$t.open(wf.name)}></a>
   <div class="preview">
     <img src={fileUrl(wf, "preview")} alt={wf.name} loading="lazy" />
     <!-- your own face's state (or anyone's face's type) sits on its dial, in the empty corner the disc leaves, so the
          caption row below stays one line on every card -->
     {#if manage}
-      <span class="status"><Badge>{wf.published ? "Published" : "Draft"}</Badge></span>
+      <span class="status"><Badge>{wf.published ? $t.published : $t.draft}</Badge></span>
     {:else if wf.type}
       <span class="status"><Badge>{wf.type}</Badge></span>
     {/if}
@@ -75,14 +76,14 @@
   {/if}
   <div class="footer">
     <div class="stats">
-      <span class="stat type-caption" title="Downloads">
+      <span class="stat type-caption" title={$t.downloads}>
         <Icon name="download" size={18} />
         {compact(wf.downloads)}
       </span>
       <button
         class="stat like type-caption"
-        title="Like"
-        aria-label="Like"
+        title={$t.like}
+        aria-label={$t.like}
         aria-pressed={liked}
         disabled={!canLike}
         onclick={stop(onLike)}
@@ -106,28 +107,28 @@
       <span class="menu-slot" onclick={(e) => e.stopPropagation()}>
         <Menu>
           {#snippet trigger({ toggle })}
-            <button class="action-btn" title="More" aria-label="More" onclick={toggle}>
+            <button class="action-btn" title={$t.more} aria-label={$t.more} onclick={toggle}>
               <Icon name="more_horiz" size={22} />
             </button>
           {/snippet}
           <MenuItem href={downloadUrl(wf)}>
             <Icon name="download" size={16} />
-            Download .bin
+            {$t.downloadBin}
           </MenuItem>
           {#if manage}
             <MenuItem onClick={onEdit}>
               <Icon name="edit" size={16} />
-              Edit
+              {$t.edit}
             </MenuItem>
             <MenuItem onClick={onPublishToggle}>
               <Icon name={wf.published ? "public_off" : "public"} size={16} />
-              {wf.published ? "Unpublish" : "Publish"}
+              {wf.published ? $t.unpublish : $t.publish}
             </MenuItem>
           {/if}
           {#if canRemove}
             <MenuItem danger onClick={onRemove}>
               <Icon name="delete" size={16} />
-              Delete
+              {$t.delete}
             </MenuItem>
           {/if}
         </Menu>

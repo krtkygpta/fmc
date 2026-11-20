@@ -12,6 +12,8 @@
   import { WatchfaceList } from "../components/watchface-list";
   import { authModel, profileModel } from "$lib/modules/auth/model";
   import ProfileEditor from "$lib/modules/auth/components/profile-editor.svelte";
+  import { i18nModel } from "$lib/shared/i18n";
+  import { t } from "../i18n";
 
   interface Props {
     userId: string;
@@ -27,17 +29,18 @@
   } = marketModel;
   const { $user: user } = authModel;
   const { profileEditOpened } = profileModel;
+  const { $locale: locale } = i18nModel;
 
   $effect(() => {
     profileLoadRequested(userId);
   });
 
   const own = $derived($user?.id === userId);
-  const name = $derived($profile?.name || "Creator");
+  const name = $derived($profile?.name || $t.creator);
   const avatar = $derived($profile?.avatar ? fileUrl($profile, "avatar") : undefined);
   const joined = $derived(
     $profile
-      ? new Date($profile.created).toLocaleDateString(undefined, {
+      ? new Date($profile.created).toLocaleDateString($locale, {
           year: "numeric",
           month: "long",
         })
@@ -57,12 +60,12 @@
         <Avatar {name} src={avatar} />
         <div class="identity">
           <h1 class="type-title">{name}</h1>
-          <p class="meta type-caption">Joined {joined}</p>
+          <p class="meta type-caption">{$t.joined(joined)}</p>
         </div>
         {#if own}
           <Button kind="secondary" onClick={() => profileEditOpened()}>
             <Icon name="edit" size={18} />
-            <span class="edit-label">Edit profile</span>
+            <span class="edit-label">{$t.editProfile}</span>
           </Button>
         {/if}
       </div>
@@ -70,9 +73,9 @@
       <div class="stats">
         <StatStrip
           items={[
-            { label: "Watchfaces", value: $profileItems.length },
-            { label: "Likes", value: compact(totalLikes) },
-            { label: "Downloads", value: compact(totalDownloads) },
+            { label: $t.watchfaces, value: $profileItems.length },
+            { label: $t.likes, value: compact(totalLikes) },
+            { label: $t.downloads, value: compact(totalDownloads) },
           ]}
         />
       </div>
@@ -92,7 +95,7 @@
     items={$profileItems}
     loading={$profileLoading}
     showAuthor={false}
-    empty="Nothing published yet."
+    empty={$t.nothingPublished}
   />
 </Page>
 
