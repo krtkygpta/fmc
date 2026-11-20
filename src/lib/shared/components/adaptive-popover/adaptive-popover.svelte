@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { common as t } from "$lib/shared/i18n";
   // The same panel in two shells: a drawer sliding out beside the left rail on desktop (the
   // Google Fonts filters pattern), the swipeable sheet on the phone. This component owns the
   // choice, so neither shell learns about the other — the sheet stays headless.
@@ -75,7 +76,7 @@
     >
       <header>
         {#if title}<h2 class="type-heading" id="drawer-{uid}">{title}</h2>{/if}
-        <button class="close" aria-label="Close" onclick={() => onClose?.()}>
+        <button class="close" aria-label={$t.close} onclick={() => onClose?.()}>
           <Icon name="close" />
         </button>
       </header>
@@ -87,7 +88,7 @@
     {#snippet header()}
       <header class="in-sheet">
         {#if title}<h2 class="type-heading">{title}</h2>{/if}
-        <button class="close" aria-label="Close" onclick={() => onClose?.()}>
+        <button class="close" aria-label={$t.close} onclick={() => onClose?.()}>
           <Icon name="close" />
         </button>
       </header>

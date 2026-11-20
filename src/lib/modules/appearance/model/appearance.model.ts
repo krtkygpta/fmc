@@ -21,11 +21,14 @@ const readStored = (): string | null => {
 // ---- stores ----
 export const $accent = createStore(accentById(readStored()).id);
 export const $accentDialogOpen = createStore(false);
+export const $languageDialogOpen = createStore(false);
 
 // ---- events ----
 export const accentPicked = createEvent<string>();
 export const accentDialogOpened = createEvent();
 export const accentDialogClosed = createEvent();
+export const languageDialogOpened = createEvent();
+export const languageDialogClosed = createEvent();
 
 // ---- effects ----
 const applyAccentFx = createEffect((id: string) => {
@@ -62,6 +65,17 @@ sample({
   clock: accentDialogClosed,
   fn: () => false,
   target: $accentDialogOpen,
+});
+
+sample({
+  clock: languageDialogOpened,
+  fn: () => true,
+  target: $languageDialogOpen,
+});
+sample({
+  clock: languageDialogClosed,
+  fn: () => false,
+  target: $languageDialogOpen,
 });
 
 // the saved colour goes on at startup, not on the first pick ($accent's own initial value

@@ -5,6 +5,7 @@
   import { Icon } from "$lib/shared/components/icon";
   import { ACCENTS } from "../lib/accents";
   import { appearanceModel } from "../model";
+  import { t } from "../i18n";
 
   const {
     $accent: accent,
@@ -14,8 +15,8 @@
   } = appearanceModel;
 </script>
 
-<Dialog open={$open} title="Accent color" onClose={() => accentDialogClosed()}>
-  <div class="grid" role="radiogroup" aria-label="Accent color">
+<Dialog open={$open} title={$t.accentColor} onClose={() => accentDialogClosed()}>
+  <div class="grid" role="radiogroup" aria-label={$t.accentColor}>
     {#each ACCENTS as a (a.id)}
       <button
         type="button"
@@ -28,7 +29,7 @@
         <span class="dot" style:--swatch={a.swatch}>
           {#if a.id === $accent}<Icon name="check" size={20} />{/if}
         </span>
-        {a.label}
+        {$t[a.id as keyof typeof $t] ?? a.label}
       </button>
     {/each}
   </div>

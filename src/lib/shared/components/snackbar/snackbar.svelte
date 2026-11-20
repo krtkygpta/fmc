@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { common as t } from "$lib/shared/i18n";
   // A message about something that just happened, floating over the page rather than pushing
   // it down: it rises from the bottom (above the phone's dock), leaves on its own after
   // `timeout`, and can be sent away early — the ×, or a swipe sideways like a notification.
@@ -68,7 +69,7 @@
   >
     <Icon name={tone === "error" ? "error" : "info"} size={20} />
     <span class="message">{message}</span>
-    <button class="close" aria-label="Dismiss" onclick={onDismiss}>
+    <button class="close" aria-label={$t.dismiss} onclick={onDismiss}>
       <Icon name="close" size={18} />
     </button>
   </div>

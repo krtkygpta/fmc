@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { common as t } from "$lib/shared/i18n";
   // One overlay in two shells, like adaptive-popover/: a centred modal where there is room for
   // one, the swipeable sheet on a phone — so everything that opens over a phone screen opens
   // the same way, from the bottom, under the thumb.
@@ -37,7 +38,7 @@
 {#snippet head(close: () => void)}
   <header>
     {#if title}<h2 class="type-heading" id="dialog-{uid}">{title}</h2>{/if}
-    <button class="close" aria-label="Close" onclick={close}>
+    <button class="close" aria-label={$t.close} onclick={close}>
       <Icon name="close" />
     </button>
   </header>

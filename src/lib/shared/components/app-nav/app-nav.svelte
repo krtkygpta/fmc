@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { common as t } from "$lib/shared/i18n";
   import { page } from "$app/state";
   import { authModel } from "$lib/modules/auth/model";
   import { fileUrl } from "$lib/shared/api";
@@ -6,18 +7,19 @@
   // importing the model is also what puts a saved accent colour on the page at startup
   import { appearanceModel } from "$lib/modules/appearance/model";
   import AccentDialog from "$lib/modules/appearance/components/accent-dialog.svelte";
+  import LanguageDialog from "$lib/modules/appearance/components/language-dialog.svelte";
   import { Avatar } from "$lib/shared/components/avatar";
   import { Icon, type IconName } from "$lib/shared/components/icon";
   import { Menu, MenuItem } from "$lib/shared/components/menu";
 
   const { $user: user, logout } = authModel;
-  const { accentDialogOpened } = appearanceModel;
+  const { accentDialogOpened, languageDialogOpened } = appearanceModel;
   const path = $derived(page.url.pathname);
   const nav = $derived<{ title: string; url: string; icon: IconName; active: boolean }[]>([
     // one tab for every shelf — watchfaces, apps, firmware: the store's own header switches
     // between them (see store-tabs), so the bar stays at four tabs on a phone
     {
-      title: "Store",
+      title: $t.store,
       url: "/",
       icon: "storefront",
       active:
@@ -26,7 +28,7 @@
           path.startsWith(p),
         ),
     },
-    { title: "Editor", url: "/editor", icon: "edit", active: path.startsWith("/editor") },
+    { title: $t.editor, url: "/editor", icon: "edit", active: path.startsWith("/editor") },
   ]);
   const signingIn = $derived(path.startsWith("/login") || path.startsWith("/register"));
 
@@ -35,8 +37,8 @@
   // switching reads as a mask sliding along the dock — and the thumb can be dragged by finger.
   const tabs = $derived<{ title: string; icon: IconName }[]>([
     ...nav,
-    { title: "Watch", icon: "watch" },
-    $user ? { title: "Account", icon: "person" } : { title: "Sign in", icon: "login" },
+    { title: $t.watch, icon: "watch" },
+    $user ? { title: $t.account, icon: "person" } : { title: $t.signIn, icon: "login" },
   ]);
   // only pages hold the thumb: the watch panel and the account menu are overlays
   const activeAt = $derived(
@@ -142,7 +144,7 @@
           <Icon name="watch" size={24} />
           {#if connected}<span class="dot"></span>{/if}
         </span>
-        Watch
+        {$t.watch}
       </button>
     {/snippet}
   </WatchSheet>
@@ -158,24 +160,28 @@
                 src={$user.avatar ? fileUrl($user, "avatar") : undefined}
               />
             </span>
-            Account
+            {$t.account}
           </button>
         {/snippet}
         <MenuItem href="/user/{$user.id}">
           <Icon name="person" size={16} />
-          Profile
+          {$t.profile}
         </MenuItem>
         <MenuItem onClick={() => accentDialogOpened()}>
           <Icon name="palette" size={16} />
-          Accent color
+          {$t.accentColor}
+        </MenuItem>
+        <MenuItem onClick={() => languageDialogOpened()}>
+          <Icon name="translate" size={16} />
+          {$t.language}
         </MenuItem>
         <MenuItem href="https://github.com/freethinkel/fmc/issues">
           <Icon name="help" size={16} />
-          Report an issue
+          {$t.reportIssue}
         </MenuItem>
         <MenuItem danger onClick={() => logout()}>
           <Icon name="logout" size={16} />
-          Log out
+          {$t.logOut}
         </MenuItem>
       </Menu>
     </span>
@@ -186,7 +192,7 @@
         <span class="icon">
           <Icon name="login" size={24} />
         </span>
-        Sign in
+        {$t.signIn}
       </a>
     </span>
   {/if}
@@ -210,6 +216,7 @@
   </div>
 </nav>
 <AccentDialog />
+<LanguageDialog />
 
 <style>
   nav {

@@ -3,6 +3,12 @@
   import LoginForm from "../components/login-form.svelte";
   import { authModel } from "../model";
   import { goto } from "$app/navigation";
+  import { Select } from "$lib/shared/components/select";
+  import { i18nModel, LOCALES } from "$lib/shared/i18n";
+
+  // signed out there is no account menu, so the language is picked here
+  const { $locale: locale, localePicked } = i18nModel;
+  const languages = Object.entries(LOCALES).map(([value, label]) => ({ value, label }));
 
   const { $user: user } = authModel;
   // ponytail: already logged in — nothing to see on this page
@@ -19,6 +25,9 @@
     <Card>
       <LoginForm />
     </Card>
+    <span class="language">
+      <Select value={$locale} options={languages} onChange={(v) => localePicked(v)} />
+    </span>
   </div>
 </div>
 
@@ -38,6 +47,9 @@
     gap: 1rem;
     width: 100%;
     max-width: 23.75rem;
+  }
+  .language {
+    align-self: center;
   }
   h1 {
     margin: 0;
