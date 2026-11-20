@@ -58,6 +58,13 @@
   <a class="open-link" {href} aria-label="Open {wf.name}"></a>
   <div class="preview">
     <img src={fileUrl(wf, "preview")} alt={wf.name} loading="lazy" />
+    <!-- your own face's state (or anyone's face's type) sits on its dial, in the empty corner the disc leaves, so the
+         caption row below stays one line on every card -->
+    {#if manage}
+      <span class="status"><Badge>{wf.published ? "Published" : "Draft"}</Badge></span>
+    {:else if wf.type}
+      <span class="status"><Badge>{wf.type}</Badge></span>
+    {/if}
   </div>
   <h3 title={wf.name} class="name type-subtitle">{wf.name}</h3>
   {#if wf.owner && showAuthor}
@@ -89,11 +96,6 @@
         {compact(likeCount)}
       </button>
     </div>
-    {#if manage}
-      <Badge>{wf.published ? "Published" : "Draft"}</Badge>
-    {:else if wf.type}
-      <Badge>{wf.type}</Badge>
-    {/if}
     {#if device}
       <span class="device type-label">{device.replace(/^Watch /, "")}</span>
     {/if}
@@ -182,7 +184,19 @@
     }
   }
   .preview {
+    position: relative;
     margin-bottom: 0.375rem;
+
+    .status {
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      /* over the dial's edge, so it carries the card's own ground instead of a see-through pill */
+      :global(.badge) {
+        background: var(--color-background);
+      }
+    }
 
     img {
       display: block;
@@ -223,11 +237,10 @@
       }
     }
   }
-  /* one line: the numbers, then which watch (a mono word, not a badge — it is on every card),
-     then the menu; only a Draft/Published badge can push it to a second line */
+  /* one line on every card: the numbers, then which watch (a mono word, not a badge — it is
+     on every card), then the menu. Draft/Published lives on the dial (.status), not here */
   .footer {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: 0.25rem 0.375rem;
     margin-top: auto;

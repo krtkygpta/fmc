@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { goto } from "$app/navigation";
+  import { afterNavigate } from "$app/navigation";
   import { tick, untrack } from "svelte";
   import { fade } from "svelte/transition";
   import type { RecordModel } from "pocketbase";
@@ -25,11 +25,18 @@
     $marketView: marketView,
     $topCreators: topCreators,
     marketViewPatched,
+    marketFilterPicked,
+    marketUrlChanged,
     marketLoadRequested,
     myLoadRequested,
   } = marketModel;
 
   marketLoadRequested();
+  // the filters come from the URL on a load, a link, Back/Forward — not on a pick's own write
+  // (type "goto"), which already updated the view (see marketFilterPicked)
+  afterNavigate(({ type, to }) => {
+    if (type !== "goto" && to) marketUrlChanged(to.url);
+  });
 
   // one page, two shelves: everyone's published faces, or the signed-in user's own (drafts
   // included). The shelf is in the URL (?mine) so it survives a reload and can be linked.
@@ -78,7 +85,7 @@
               { value: "mine", label: "Mine" },
               { value: "liked", label: "Liked" },
             ],
-            pick: (v: string) => void goto(v === "all" ? "/" : `/?${v}`, { replaceState: true }),
+            pick: (value: string) => marketFilterPicked({ key: "shelf", value }),
           },
         ]
       : []),
@@ -86,13 +93,13 @@
       name: "Device",
       value: $marketView.device,
       options: DEVICE_OPTIONS,
-      pick: (device: string) => marketViewPatched({ device }),
+      pick: (value: string) => marketFilterPicked({ key: "device", value }),
     },
     {
       name: "Sort",
       value: $marketView.sort,
       options: SORT_OPTIONS,
-      pick: (sort: string) => marketViewPatched({ sort }),
+      pick: (value: string) => marketFilterPicked({ key: "sort", value }),
     },
   ]);
   // which of them is open in the menu; null — the list of filters itself
@@ -177,7 +184,9 @@
     <!-- the search and, beside it, one button for everything that narrows or orders the
            shelf: which watch, which order -->
     <div class="find">
-      <SearchInput bind:value={() => $marketView.query, (query) => marketViewPatched({ query })} />
+      <SearchInput
+        bind:value={() => $marketView.query, (value) => marketFilterPicked({ key: "q", value })}
+      />
       <Menu align="end">
         {#snippet trigger({ open, toggle })}
           <button

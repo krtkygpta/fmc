@@ -16,6 +16,7 @@ import { decodeAssets } from "$lib/modules/editor/core/render/pixels";
 import type { ImageStore } from "$lib/modules/editor/core/render/canvas";
 import { topCreators } from "../lib/top-creators";
 import * as marketApi from "./market.api";
+import { FILTER_DEFAULTS, filterHref, type FilterKey } from "../lib/filter-href";
 
 export type { SavePayload } from "./market.api";
 
@@ -152,6 +153,42 @@ sample({
     return next;
   },
   target: $marketView,
+});
+
+// The shelf's filters live in the URL — ?mine / ?liked, device, sort, q — so a filtered shelf
+// can be linked and Back undoes a pick. A pick updates $marketView at once and pushes a history
+// entry; the search replaces the entry instead, or every keystroke would be one more Back.
+// The URL is read back into $marketView only on navigations that didn't come from a pick
+// (first load, a link, Back/Forward): reading our own writes back would race the typing.
+export const marketFilterPicked = createEvent<{ key: FilterKey; value: string }>();
+export const marketUrlChanged = createEvent<URL>();
+
+const filterUrlFx = createEffect(({ key, value }: { key: FilterKey; value: string }) =>
+  goto(filterHref(location.href, key, value), {
+    replaceState: key === "q",
+    keepFocus: true,
+    noScroll: true,
+  }),
+);
+
+sample({
+  clock: marketFilterPicked,
+  target: filterUrlFx,
+});
+sample({
+  clock: marketFilterPicked,
+  filter: ({ key }) => key !== "shelf", // the shelf is read from the URL by the page itself
+  fn: ({ key, value }): Partial<MarketView> => (key === "q" ? { query: value } : { [key]: value }),
+  target: marketViewPatched,
+});
+sample({
+  clock: marketUrlChanged,
+  fn: (url): Partial<MarketView> => ({
+    device: url.searchParams.get("device") ?? FILTER_DEFAULTS.device,
+    sort: url.searchParams.get("sort") ?? FILTER_DEFAULTS.sort,
+    query: url.searchParams.get("q") ?? FILTER_DEFAULTS.q,
+  }),
+  target: marketViewPatched,
 });
 
 export const myLoadRequested = createEvent<string>();
