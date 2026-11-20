@@ -16,8 +16,6 @@
     aliasIsGuess,
     aliasOf,
     collectSlotsDoc,
-    describeConditions,
-    pickerLabel,
     frameLabelsOf,
     ID_LABELS,
     SOURCE_IDS,
@@ -28,6 +26,7 @@
   import { editorModel } from "../../model";
   import { num, set } from "./patch";
   import FrameThumb from "./frame-thumb.svelte";
+  import { t, conditionLines, sourceName, sourcePick } from "../../i18n-inspector";
 
   const { layer }: { layer: Layer } = $props();
   const {
@@ -53,21 +52,19 @@
   );
   const ring = $derived(layer.kind === "ring" ? layer : null);
   const conditions = $derived(layer.conditions);
-  const bindLines = $derived(describeConditions(conditions));
+  const bindLines = $derived(conditionLines($t, conditions));
   const frameLabels = $derived(frameLabelsOf(layer));
 
   const setSourceId = (source: number) => sourceIdSet({ id: layer.id, source });
   // an alias says, in the open list, which id it duplicates (#39); the trigger keeps the short name
   const sourceOption = (id: number) => {
     const of = aliasOf(id);
+    const name = sourcePick($t, id);
 
     return {
       value: String(id),
-      label:
-        of == null
-          ? pickerLabel(id)
-          : `${pickerLabel(id)} — ${aliasIsGuess(id) ? "probably " : ""}same as 0x${of.toString(16)}`,
-      short: pickerLabel(id),
+      label: of == null ? name : `${name} — ${$t.sameAs(of.toString(16), aliasIsGuess(id))}`,
+      short: name,
     };
   };
   const sourceOptions = $derived(
@@ -121,11 +118,11 @@
     collectSlotsDoc($doc?.screens.find((s) => s.kind === $screen)?.layers ?? []),
   );
   const slotBindOptions = $derived([
-    { value: "", label: "always (not slot-bound)" },
+    { value: "", label: $t.notSlotBound },
     ...slots.flatMap((s) =>
       s.ids.map((id, i) => ({
         value: `${s.index}:${i}`,
-        label: `slot ${s.index} — ${pickerLabel(id)}`,
+        label: $t.slotOption(s.index, sourcePick($t, id)),
       })),
     ),
   ]);
@@ -140,14 +137,14 @@
   // Conditions are decoded on the layer now, so they are edited per entry rather than as a hex
   // blob. ponytail: no reordering — equality lines OR together and the rest must all hold, so
   // order carries no meaning.
-  const OPS: { value: CondOp; label: string; short: string }[] = [
-    { value: "eq", label: "= (show if)", short: "=" },
-    { value: "ne", label: "≠ (hide if)", short: "≠" },
-    { value: "lt", label: "< (only if)", short: "<" },
-    { value: "gte", label: "≥ (only if)", short: "≥" },
-    { value: "lte", label: "≤ (only if)", short: "≤" },
-    { value: "noData", label: "= no-data marker", short: "= ∅" },
-  ];
+  const OPS = $derived<{ value: CondOp; label: string; short: string }[]>([
+    { value: "eq", label: $t.op.eq, short: "=" },
+    { value: "ne", label: $t.op.ne, short: "≠" },
+    { value: "lt", label: $t.op.lt, short: "<" },
+    { value: "gte", label: $t.op.gte, short: "≥" },
+    { value: "lte", label: $t.op.lte, short: "≤" },
+    { value: "noData", label: $t.op.noData, short: "= ∅" },
+  ]);
 
   const setCondition = (i: number, patch: Partial<Condition>) =>
     set(layer.id, {
@@ -164,7 +161,7 @@
     <!-- a label beside its field, like every other row: a caps label here would read as a
          second section title right under "Data" -->
     <div class="row">
-      <span class="type-caption field-label w-md">source</span>
+      <span class="type-caption field-label w-md">{$t.source}</span>
       <Select
         value={String(meta.source)}
         options={sourceOptions}
@@ -173,20 +170,15 @@
     </div>
     {#if sourceAlias != null}
       <p class="type-caption hint-xs">
-        {#if aliasIsGuess(meta.source)}
-          probably reads the same value as 0x{sourceAlias.toString(16)} — what this id reads is unconfirmed,
-          so check it on the watch before relying on it.
-        {:else}
-          a firmware alias: reads the same value as 0x{sourceAlias.toString(16)}.
-        {/if}
-        A second id only matters when a number and a ring show one metric — on a shared id the number
-        reads the ring's percent
+        {aliasIsGuess(meta.source)
+          ? $t.aliasGuess(sourceAlias.toString(16))
+          : $t.aliasSure(sourceAlias.toString(16))}
+        {$t.aliasNote}
       </p>
     {/if}
     {#if frameLabels && images.length && images.length !== frameLabels.length}
       <p class="type-caption hint-xs">
-        {ID_LABELS[meta.source]} needs {frameLabels.length} frames, this widget has
-        {images.length}
+        {$t.needsFrames(sourceName($t, meta.source), frameLabels.length, images.length)}
       </p>
     {/if}
   </div>
@@ -197,13 +189,13 @@
        instead of sitting flush against the source select. -->
   <div class="row">
     <Input
-      label="empty"
+      label={$t.empty}
       type="number"
       value={String(ring.spec.min)}
       onInput={(v) => setSpec({ min: num(v) })}
     />
     <Input
-      label="full"
+      label={$t.full}
       type="number"
       value={String(ring.spec.max)}
       onInput={(v) => setSpec({ max: num(v) })}
@@ -214,7 +206,7 @@
   <div class="check-row">
     <Switch checked={isAccent(meta)} onChange={(v) => setAccent(v)} />
     <button type="button" class="check-label" onclick={() => setAccent(!isAccent(meta))}
-      >tints with device accent color</button
+      >{$t.accentTint}</button
     >
   </div>
 {/if}
@@ -222,18 +214,17 @@
   <div class="check-row">
     <Switch checked={isSmooth} onChange={(v) => setSourceId(v ? 0x12 : 0x72)} />
     <button type="button" class="check-label" onclick={() => setSourceId(isSmooth ? 0x72 : 0x12)}>
-      smooth sweep (unchecked — ticks once per second)
+      {$t.smoothSweep}
     </button>
   </div>
 {/if}
 {#if isBrokenRing}
   <div class="group">
-    <p class="type-caption hint-xs">
-      this source freezes a ring on the watch — it only animates a hand
-    </p>
+    <p class="type-caption hint-xs">{$t.brokenRing}</p>
     <div class="row">
       <Button size="small" kind="secondary" onClick={() => setSourceId(0x0f)}>
-        <Icon name="undo" size={18} /> switch to second (0x0f)
+        <Icon name="undo" size={18} />
+        {$t.switchToSecond}
       </Button>
     </div>
   </div>
@@ -242,7 +233,7 @@
   <div class="row">
     <span class="digits">
       <Input
-        label="digits"
+        label={$t.digits}
         type="number"
         min={0}
         max={31}
@@ -253,14 +244,14 @@
     <span class="check-row">
       <Switch checked={num_.padZero} onChange={(v) => setFmt(num_.digits, v)} />
       <button type="button" class="check-label" onclick={() => setFmt(num_.digits, !num_.padZero)}
-        >leading zeros</button
+        >{$t.leadingZeros}</button
       >
     </span>
   </div>
 {/if}
 {#if slot}
   <div class="group">
-    <span class="type-label muted-label">slot metrics</span>
+    <span class="type-label muted-label">{$t.slotMetrics}</span>
     <!-- the menu the companion app shows for this slot; the wearer picks one of these on the
          watch, and a sibling layer bound to it (see "widget slot binding") is what draws -->
     {#each slot.metrics as m, i (m)}
@@ -268,11 +259,11 @@
         <!-- frames[0] is the on-watch placeholder, so metric i wears frames[i + 1]. Same
              component as the frame list: click to replace the art, hover to download it. -->
         <FrameThumb id={slot.frames[i + 1]} size={2} />
-        <span class="type-caption field-label grow">{pickerLabel(m)}</span>
+        <span class="type-caption field-label grow">{sourcePick($t, m)}</span>
         <button
           type="button"
           class="icon-btn"
-          title="Remove this metric"
+          title={$t.removeMetric}
           disabled={slot.metrics.length < 2}
           onclick={() => slotMetricRemoved({ id: layer.id, metric: m })}
         >
@@ -284,20 +275,18 @@
       <Select
         value=""
         options={[
-          { value: "", label: "add a metric…" },
-          ...addable.map((m) => ({ value: String(m), label: pickerLabel(m) })),
+          { value: "", label: $t.addMetric },
+          ...addable.map((m) => ({ value: String(m), label: sourcePick($t, m) })),
         ]}
         onChange={(v) => v && slotMetricAdded({ id: layer.id, metric: Number(v) })}
       />
     {/if}
-    <p class="type-caption hint-xs">
-      each metric gets a blank icon for the app's picker — drop art on it below
-    </p>
+    <p class="type-caption hint-xs">{$t.metricIconHint}</p>
   </div>
 {/if}
 {#if showSlotBind}
   <div class="group">
-    <span class="type-label muted-label">widget slot binding</span>
+    <span class="type-label muted-label">{$t.slotBinding}</span>
     <Select
       value={slotBindValue}
       options={slotBindOptions}
@@ -307,12 +296,12 @@
         slotBindSet({ id: layer.id, slot, metric });
       }}
     />
-    <p class="type-caption hint-xs">shows this layer only while that slot is set to that metric</p>
+    <p class="type-caption hint-xs">{$t.slotBindHint}</p>
   </div>
 {/if}
 {#if conditions.length}
   <div class="group">
-    <span class="type-label muted-label">conditions</span>
+    <span class="type-label muted-label">{$t.conditions}</span>
     {#each conditions as c, i (i)}
       <div class="row">
         <Select
@@ -330,7 +319,7 @@
         </span>
         <button
           type="button"
-          title="Remove condition"
+          title={$t.removeCondition}
           class="icon-btn"
           onclick={() => dropCondition(i)}
         >
@@ -340,16 +329,15 @@
       <p class="type-caption hint-xs">{bindLines[i]}</p>
     {/each}
     {#if conditions.length > 1}
-      <p class="type-caption hint-xs">
-        "show if" lines are OR-ed, "only if"/"hide if" must all hold
-      </p>
+      <p class="type-caption hint-xs">{$t.condLogicHint}</p>
     {/if}
   </div>
 {/if}
 {#if conditions.length || layer.kind !== "raw"}
   <div class="row">
     <Button size="small" kind="secondary" onClick={() => conditionAdded(layer.id)}>
-      <Icon name="call_split" size={18} /> add condition
+      <Icon name="call_split" size={18} />
+      {$t.addCondition}
     </Button>
   </div>
 {/if}

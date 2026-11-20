@@ -5,6 +5,7 @@
   import { Icon } from "$lib/shared/components/icon";
   import { framesOf, type Layer } from "../../core/document/doc";
   import { editorModel } from "../../model";
+  import { t } from "../../i18n-inspector";
 
   const { layer }: { layer: Layer } = $props();
   const { $doc: doc, adjustImageRequested } = editorModel;
@@ -22,7 +23,7 @@
     { key: "contrast", label: "contrast", max: 200, unit: "%" },
     { key: "saturate", label: "saturate", max: 300, unit: "%" },
     { key: "hue", label: "hue", max: 360, unit: "°", track: HUE_TRACK },
-  ] as const;
+  ] as const; // label = a key of the inspector dictionary
   const NEUTRAL = { brightness: 100, contrast: 100, saturate: 100, hue: 0 };
   const adjust = $derived(first?.adjust ?? NEUTRAL);
   const changed = $derived(ADJUST.some((a) => adjust[a.key] !== NEUTRAL[a.key]));
@@ -33,7 +34,7 @@
 {#if first}
   {#each ADJUST as a (a.key)}
     <div class="row">
-      <span class="type-caption field-label w-md">{a.label}</span>
+      <span class="type-caption field-label w-md">{$t[a.label]}</span>
       <Slider
         max={a.max}
         step={5}
@@ -47,7 +48,8 @@
   {#if changed}
     <div class="row">
       <Button size="small" kind="secondary" onClick={() => apply(NEUTRAL)}>
-        <Icon name="restart_alt" size={18} /> reset
+        <Icon name="restart_alt" size={18} />
+        {$t.reset}
       </Button>
     </div>
   {/if}

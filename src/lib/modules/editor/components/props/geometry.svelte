@@ -9,6 +9,7 @@
   import { editorModel } from "../../model";
   import type { AlignDir } from "../../model/edit.model";
   import { num, set } from "./patch";
+  import { t } from "../../i18n-inspector";
 
   const { layer }: { layer: Layer } = $props();
   const {
@@ -21,21 +22,21 @@
     alignRequested,
   } = editorModel;
 
-  const FLEX_ALIGN: [number, IconName, string][] = [
-    [0, "align_horizontal_left", "Pack children at the frame start"],
-    [2, "align_horizontal_center", "Center children in the frame"],
-  ];
+  const FLEX_ALIGN = $derived<[number, IconName, string][]>([
+    [0, "align_horizontal_left", $t.packStart],
+    [2, "align_horizontal_center", $t.centerChildren],
+  ]);
 
-  const alignH: [AlignDir, IconName, string][] = [
-    ["left", "align_horizontal_left", "Align left"],
-    ["hcenter", "align_horizontal_center", "Align horizontal centers"],
-    ["right", "align_horizontal_right", "Align right"],
-  ];
-  const alignV: [AlignDir, IconName, string][] = [
-    ["top", "align_vertical_top", "Align top"],
-    ["vcenter", "align_vertical_center", "Align vertical centers"],
-    ["bottom", "align_vertical_bottom", "Align bottom"],
-  ];
+  const alignH = $derived<[AlignDir, IconName, string][]>([
+    ["left", "align_horizontal_left", $t.alignLeft],
+    ["hcenter", "align_horizontal_center", $t.alignHCenter],
+    ["right", "align_horizontal_right", $t.alignRight],
+  ]);
+  const alignV = $derived<[AlignDir, IconName, string][]>([
+    ["top", "align_vertical_top", $t.alignTop],
+    ["vcenter", "align_vertical_center", $t.alignVCenter],
+    ["bottom", "align_vertical_bottom", $t.alignBottom],
+  ]);
 
   const placed = $derived(isPlaced(layer) ? layer : null);
   const frame = $derived(layer.kind === "group" ? layer.frame : null);
@@ -126,7 +127,7 @@
     />
     <button
       type="button"
-      title={$lockAspect ? "Aspect ratio locked" : "Aspect ratio free"}
+      title={$lockAspect ? $t.aspectLocked : $t.aspectFree}
       class="icon-btn"
       class:on={$lockAspect}
       onclick={() => lockAspectToggled()}
@@ -138,7 +139,7 @@
     <!-- half a row: the field keeps the width of the x and w above it -->
     <span class="half">
       <Input
-        label="angle"
+        label={$t.angle}
         unit="°"
         type="number"
         step={15}
@@ -149,15 +150,13 @@
     <span class="half"></span>
     <span class="icon-pad"></span>
   </div>
-  <p class="type-caption hint-xs">
-    size and angle are baked into the pixels — re-encoded only on save or flash
-  </p>
+  <p class="type-caption hint-xs">{$t.bakedHint}</p>
 {/if}
 {#if ring}
   <div class="row">
     {#if bareRing}
       <Input
-        label="size"
+        label={$t.size}
         type="number"
         min={4}
         max={2 * (FULL_BLEED_R - 1)}
@@ -166,7 +165,7 @@
       />
     {/if}
     <Input
-      label="stroke"
+      label={$t.stroke}
       type="number"
       min={1}
       value={String(ring.spec.width)}
@@ -175,21 +174,19 @@
   </div>
   <div class="row">
     <Input
-      label="start"
+      label={$t.start}
       type="number"
       value={String(ring.spec.start)}
       onInput={(v) => setSpec({ start: num(v) })}
     />
     <Input
-      label="end"
+      label={$t.end}
       type="number"
       value={String(ring.spec.end)}
       onInput={(v) => setSpec({ end: num(v) })}
     />
   </div>
-  <p class="type-caption hint-xs">
-    degrees clockwise from 12 o'clock — 20 → 340 leaves a 40° gap at the top
-  </p>
+  <p class="type-caption hint-xs">{$t.sweepHint}</p>
 {/if}
 {#if frame}
   <div class="row">
@@ -221,7 +218,7 @@
     />
   </div>
   <div class="row">
-    <span class="type-caption field-label w-md">align</span>
+    <span class="type-caption field-label w-md">{$t.align}</span>
     <!-- one choice of two, so the app's segmented control, chosen in ink like everywhere else -->
     <Tabs
       full
@@ -230,22 +227,22 @@
       onChange={(v) => setFrame({ main: Number(v) })}
     />
   </div>
-  <p class="type-caption hint-xs">where the group's auto-laid-out children sit along the row</p>
+  <p class="type-caption hint-xs">{$t.groupAlignHint}</p>
 {/if}
 {#if hand}
   <div class="row">
     <Input
-      label="pivot x"
+      label={$t.pivotX}
       type="number"
       value={String(hand.pivotX)}
       onInput={(v) => set(layer.id, { pivotX: num(v) } as Partial<Layer>)}
     />
     <Input
-      label="pivot y"
+      label={$t.pivotY}
       type="number"
       value={String(hand.pivotY)}
       onInput={(v) => set(layer.id, { pivotY: num(v) } as Partial<Layer>)}
     />
   </div>
-  <p class="type-caption hint-xs">screen center = {CENTER},{CENTER} (x+pivotX, y+pivotY)</p>
+  <p class="type-caption hint-xs">{$t.centerHint(CENTER)}</p>
 {/if}

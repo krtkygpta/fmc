@@ -3,8 +3,9 @@
   import { Button } from "$lib/shared/components/button";
   import { Icon } from "$lib/shared/components/icon";
   import { framesOf, type ImageId, type Layer } from "../../core/document/doc";
-  import { frameLabelsOf, pickerLabel } from "../../core/document/sources";
+  import { frameLabelsOf } from "../../core/document/sources";
   import { editorModel } from "../../model";
+  import { t, sourcePick } from "../../i18n-inspector";
   import { set } from "./patch";
   import FrameThumb from "./frame-thumb.svelte";
   import DragGrip from "../DragGrip.svelte";
@@ -45,7 +46,7 @@
   const slotOptions = $derived(
     slotInfo?.ids.map((id, i) => ({
       value: String(i),
-      label: pickerLabel(id),
+      label: sourcePick($t, id),
     })) ?? [],
   );
 
@@ -54,7 +55,7 @@
 
 {#if slotInfo}
   <div class="group">
-    <span class="type-label muted-label">shown metric</span>
+    <span class="type-label muted-label">{$t.shownMetric}</span>
     <Select
       value={String(slotInfo.activeIdx)}
       options={slotOptions}
@@ -67,9 +68,9 @@
        placeholder, [1..count] are the companion-app picker icons, one per metric of
        the 0x5f list — see drawSlotPlaceholder in lib/render.ts -->
   <div class="group">
-    <span class="type-label muted-label">placeholder</span>
+    <span class="type-label muted-label">{$t.placeholder}</span>
     <div class="images">{@render thumb(images[0])}</div>
-    <p class="type-caption hint-xs">drawn only on the watch's widget-edit screen</p>
+    <p class="type-caption hint-xs">{$t.placeholderHint}</p>
   </div>
 {:else if images && images.length > 1}
   <!-- A multi-frame widget is indexed BY VALUE (images[value % count]), so the order is
@@ -77,7 +78,7 @@
        on the watch. Listed with its index (and, where the format fixes them, the value
        each slot must hold) and reorderable by drag. -->
   <div class="group">
-    <span class="type-label muted-label">frames · index = value</span>
+    <span class="type-label muted-label">{$t.framesByValue}</span>
     <div class="frames">
       {#each images as ri, i}
         <div
@@ -142,7 +143,7 @@
      filled sector like any 0x5b ring, and the thumbnail above takes over. -->
 {#if layer.kind === "ring" && !images.length}
   <div class="group">
-    <span class="type-label muted-label">ring art</span>
+    <span class="type-label muted-label">{$t.ringArt}</span>
     <!-- hidden input + a real Button, same as the tree panel's own add-image control -->
     <input
       bind:this={ringFile}
@@ -157,23 +158,21 @@
     />
     <Button size="small" kind="secondary" onClick={() => ringFile?.click()}>
       <Icon name="add_photo_alternate" size={18} />
-      use a ring bitmap
+      {$t.useRingBitmap}
     </Button>
-    <p class="type-caption hint-xs">
-      a full ring, drawn at 100% — the watch clips it to the filled sector
-    </p>
+    <p class="type-caption hint-xs">{$t.ringArtHint}</p>
   </div>
 {/if}
 
 {#if $progressLine?.id === layer.id}
   <div class="group">
-    <span class="type-label muted-label">progress line color</span>
+    <span class="type-label muted-label">{$t.progressColor}</span>
     <!-- onchange, not oninput: every pick redraws all 101 frames and is one undo step -->
     <input
       class="swatch"
       type="color"
       value={$progressLine.color}
-      aria-label="Progress line color"
+      aria-label={$t.progressColor}
       onchange={(e) => progressLineColored({ id: layer.id, color: e.currentTarget.value })}
     />
   </div>
@@ -183,7 +182,7 @@
   <div class="row">
     <Button size="small" kind="secondary" onClick={() => glyphDialogOpened(layer.id)}>
       <Icon name="text_fields" size={18} />
-      regenerate from a font
+      {$t.regenFromFont}
     </Button>
   </div>
 {/if}

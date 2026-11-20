@@ -3,6 +3,7 @@
   import type { ImageId } from "../../core/document/doc";
   import { editorModel } from "../../model";
   import { thumbURL } from "./patch";
+  import { t } from "../../i18n-inspector";
 
   interface Props {
     id: ImageId;
@@ -26,7 +27,7 @@
 
 <div class="thumb-wrap">
   <label
-    title="{id} · {asset?.w}×{asset?.h} · cf{asset?.cf} — click to replace"
+    title={$t.replaceTitle(`${id} · ${asset?.w}×${asset?.h} · cf${asset?.cf}`)}
     class="thumb"
     style="--max: {size}rem"
   >
@@ -42,15 +43,11 @@
       }}
     />
   </label>
-  <button title="Download PNG" onclick={download} class="dl-btn">
+  <button title={$t.downloadPng} onclick={download} class="dl-btn">
     <Icon name="download" size={14} />
   </button>
   <!-- a transparent frame in a value-indexed set = the widget blinks off on that value -->
-  <button
-    title="Clear — transparent frame"
-    onclick={() => clearImageRequested({ id })}
-    class="dl-btn clear"
-  >
+  <button title={$t.clearFrame} onclick={() => clearImageRequested({ id })} class="dl-btn clear">
     <Icon name="ink_eraser" size={14} />
   </button>
 </div>
