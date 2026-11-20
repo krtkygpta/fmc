@@ -271,7 +271,8 @@ img {
   z-index: 1;
 }
 ::view-transition-old(store-tabs):not(:only-child) {
-  display: none;
+  animation: none;
+  opacity: 0;
 }
 ::view-transition-new(store-tabs):not(:only-child) {
   animation: none;
