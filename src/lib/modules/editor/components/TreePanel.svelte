@@ -6,13 +6,13 @@
   import { Icon, type IconName } from "$lib/shared/components/icon";
   import { Menu, MenuItem } from "$lib/shared/components/menu";
   import { TAG } from "../core/format";
-  import { pickerLabel, describeConditions } from "../core/document/sources";
   import { contains, parentOf } from "../core/document/edits";
   import { type Layer, type NodeId, type Screen } from "../core/document/doc";
   import { capsFor } from "../shared/shortcuts";
   import { editorModel } from "../model";
   import DragGrip from "./DragGrip.svelte";
   import { t } from "../i18n";
+  import { t as ti, sourcePick, conditionLines } from "../i18n-inspector";
 
   // a group folding open or shut; local (Svelte 5's default), so opening a parent doesn't also
   // play every nested group that was already open, and nothing plays on the first render
@@ -66,10 +66,10 @@
     let s = l.kind === "raw" ? (rawNames[l.tag] ?? `0x${l.tag.toString(16)}`) : $t.kinds[l.kind];
 
     if (l.kind !== "group" && l.kind !== "raw" && l.meta.source)
-      s += ` · ${pickerLabel(l.meta.source)}`;
-    if (l.kind === "slot") s += ` · ${pickerLabel(l.metrics[l.active])}`;
+      s += ` · ${sourcePick($ti, l.meta.source)}`;
+    if (l.kind === "slot") s += ` · ${sourcePick($ti, l.metrics[l.active])}`;
     if (l.kind === "hand" && l.meta.source) s += ` · ${$t.handSuffix}`;
-    if (l.conditions.length) s += ` · ${describeConditions(l.conditions).join(", ")}`;
+    if (l.conditions.length) s += ` · ${conditionLines($ti, l.conditions).join(", ")}`;
     return s;
   }
 
