@@ -55,6 +55,7 @@
   const { $user: user } = authModel;
   const {
     $bleStatus: bleStatus,
+    $bleStatusText: bleStatusText,
     $bleInfo: bleInfo,
     flashRequested,
     $flashing: flashing,
@@ -656,7 +657,7 @@
 
   {#if $err || ($flashing && $bleStatus) || $bleStatus?.startsWith("error:")}
     <p class="statusbar type-caption" class:error={$err || $bleStatus?.startsWith("error:")}>
-      {$err || $bleStatus}
+      {$err || $bleStatusText.replace(/^error:\s*/, "")}
     </p>
   {/if}
 

@@ -5,6 +5,7 @@ import { attach, createEvent, createStore, sample } from "effector";
 import { Watch } from "../lib/ble";
 import { dbgListeners } from "../lib/ble-protocol";
 import { t } from "../i18n";
+import { bleText, bt } from "../messages";
 
 export const resetRequested = createEvent();
 export const $status = createStore("");
@@ -39,9 +40,17 @@ sample({
 });
 sample({
   clock: statusChanged,
+  source: bt,
+  fn: bleText,
   target: $status,
 });
-$error.on(resetRequested, () => null).on(resetFx.failData, (_, e) => e.message);
+$error.on(resetRequested, () => null);
+sample({
+  clock: resetFx.failData,
+  source: bt,
+  fn: (w, e) => bleText(w, e.message),
+  target: $error,
+});
 $done.on(resetRequested, () => false).on(resetFx.done, () => true);
 $log
   .on(resetRequested, () => [])

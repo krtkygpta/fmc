@@ -1,6 +1,6 @@
 // Web Bluetooth: watch connection and flashing.
 import { noticeOf } from "../lib/notice";
-import { attach, createEffect, createEvent, createStore, sample } from "effector";
+import { attach, combine, createEffect, createEvent, createStore, sample } from "effector";
 import { reset } from "patronum";
 import {
   NoFreeSlotError,
@@ -16,6 +16,7 @@ import { assertFlashable, flashWarning } from "$lib/modules/editor/core/format";
 import { dbg, dbgListeners, errText } from "../lib/ble-protocol";
 import * as bleApi from "./ble.api";
 import { t } from "../i18n";
+import { bleText, bt } from "../messages";
 
 // what a flash needs: the file, a thumbnail of the face so the watch's id list can show it
 // later (the file itself never reaches catalog-names), and a key identifying the face across
@@ -39,8 +40,10 @@ let watch: Watch | null = null; // live connection — not serialized, lives out
 
 // ---- stores ----
 export const $bleStatus = createStore("");
+// $bleStatus stays English (it is compared, and goes to the log); this is what a reader sees
+export const $bleStatusText = combine($bleStatus, bt, (s, w) => bleText(w, s));
 // the status as the watch panel shows it (see lib/notice)
-export const $bleNotice = $bleStatus.map(noticeOf);
+export const $bleNotice = $bleStatusText.map(noticeOf);
 export const $bleInfo = createStore<WatchInfo | null>(null);
 // installed watchfaces: what a055 reported, plus the ones this browser side-loaded onto this
 // watch — the firmware leaves those out of its own list
@@ -181,7 +184,8 @@ sample({
 });
 sample({
   clock: flashFirmwareFx.failData,
-  fn: (e) => e.message,
+  source: bt,
+  fn: (w, e) => bleText(w, e.message),
   target: $otaError,
 });
 reset({
@@ -259,7 +263,8 @@ sample({
 });
 sample({
   clock: installPackageFx.failData,
-  fn: (e) => e.message,
+  source: bt,
+  fn: (w, e) => bleText(w, e.message),
   target: $installError,
 });
 reset({ clock: installPackageFx.finally, target: $installProgress });
@@ -364,8 +369,9 @@ reset({
 // and pending keeps the mark so the slot dialog's retry doesn't ask a second time
 sample({
   clock: flashFx.failData,
-  filter: (e) => e instanceof NeedsConfirmError,
-  fn: (e) => e.message,
+  source: bt,
+  filter: (_, e) => e instanceof NeedsConfirmError,
+  fn: (w, e) => bleText(w, e.message),
   target: $sizeWarning,
 });
 sample({

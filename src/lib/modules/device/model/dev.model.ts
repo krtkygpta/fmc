@@ -8,6 +8,7 @@ import { inspectOtaImage, OTA_DEVICE } from "../lib/ota-image";
 import { parsePackageHeader } from "../lib/wp2";
 import * as ble from "./ble.model";
 import { t } from "../i18n";
+import { bleText, bt } from "../messages";
 
 export interface LocalBuild {
   name: string;
@@ -146,8 +147,9 @@ sample({
 sample({
   clock: [pickFx.failData, readFx.failData],
   // closing the picker isn't an error
-  filter: (e) => e.name !== "AbortError",
-  fn: (e) => e.message,
+  source: bt,
+  filter: (_, e) => e.name !== "AbortError",
+  fn: (w, e) => bleText(w, e.message),
   target: $error,
 });
 reset({ clock: [pickRequested, installRequested], target: $error });
