@@ -20,6 +20,16 @@ export const loadFirmwareFx = createEffect((id: string) => pb.collection("firmwa
 // The image itself, through the download hook so a flash counts as a download. The page's
 // Download button goes through here too, to show progress on a 57 MB file.
 // A full image is ~57 MB, so the body is read as a stream and `onProgress` gets 0–100 as it comes.
+// a failed response carries its status, so the model can say it in the reader's language
+export class FetchError extends Error {
+  constructor(
+    what: string,
+    readonly status: number,
+  ) {
+    super(`couldn't fetch the ${what} (${status})`);
+  }
+}
+
 export interface ImageFetch {
   rec: RecordModel;
   onProgress: (pct: number) => void;
@@ -29,7 +39,7 @@ const fetchImage = async ({ rec, onProgress }: ImageFetch) => {
   // download hook — it serves published records only — so its file comes straight, uncounted
   const res = await fetch(rec.published ? firmwareDownloadUrl(rec) : fileUrl(rec, "image"));
 
-  if (!res.ok || !res.body) throw new Error(`couldn't fetch the image (${res.status})`);
+  if (!res.ok || !res.body) throw new FetchError("image", res.status);
   const total = Number(res.headers.get("content-length")) || 0;
   const parts: Uint8Array[] = [];
   const reader = res.body.getReader();
@@ -77,7 +87,7 @@ export const fetchLoaderPackageFx = createEffect(fetchImage);
 export const fetchAppPackageFx = createEffect(async (rec: RecordModel) => {
   const res = await fetch(appDownloadUrl(rec));
 
-  if (!res.ok) throw new Error(`couldn't fetch the package (${res.status})`);
+  if (!res.ok) throw new FetchError("package", res.status);
   return new Uint8Array(await res.arrayBuffer());
 });
 

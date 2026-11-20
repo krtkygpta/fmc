@@ -1,7 +1,9 @@
 <script lang="ts">
   // The one-time banner for the phone app, over the watchface shelf. See companion-promo.model.
   import { Icon } from "$lib/shared/components/icon";
+  import { common } from "$lib/shared/i18n";
   import { companionPromoModel } from "../model";
+  import { t } from "../i18n";
 
   const { $promoVisible: visible, promoDismissed } = companionPromoModel;
 </script>
@@ -11,13 +13,11 @@
     <a href="/companion" onclick={() => promoDismissed()}>
       <span class="glyph"><Icon name="smartphone" size={22} /></span>
       <span class="text">
-        <strong>FMC Companion mobile app</strong>
-        <span class="type-caption"
-          >Watch faces, watch apps and firmware from your phone. Android and iOS beta.</span
-        >
+        <strong>{$t.promoTitle}</strong>
+        <span class="type-caption">{$t.promoText}</span>
       </span>
     </a>
-    <button type="button" aria-label="Dismiss" onclick={() => promoDismissed()}>
+    <button type="button" aria-label={$common.dismiss} onclick={() => promoDismissed()}>
       <Icon name="close" size={20} />
     </button>
   </aside>

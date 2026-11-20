@@ -10,6 +10,7 @@
   import { compact } from "$lib/shared/lib/format";
   import { MAKE_AN_APP } from "../lib/links";
   import { storeModel } from "../model";
+  import { t } from "../i18n";
 
   const {
     $apps: apps,
@@ -22,7 +23,7 @@
   appsRequested();
 </script>
 
-<svelte:head><title>Apps for the CMF Watch Pro 2 — FMC</title></svelte:head>
+<svelte:head><title>{$t.appsTitle}</title></svelte:head>
 
 <Page>
   {#snippet header()}
@@ -34,8 +35,8 @@
     <a class="loader-note" href="/firmware">
       <Icon name="memory" size={20} class="glyph" />
       <span class="text">
-        <span class="title type-button-small">Apps need the patched firmware</span>
-        <span class="desc type-small">Set up once, then add and remove apps over Bluetooth</span>
+        <span class="title type-button-small">{$t.loaderNoteTitle}</span>
+        <span class="desc type-small">{$t.loaderNoteDesc}</span>
       </span>
       <Icon name="chevron_right" size={20} class="go" />
     </a>
@@ -68,9 +69,9 @@
                 <span class="meta type-caption">
                   {#if app.version}<span>v{app.version}</span>{/if}
                   {#if $onWatch[app.id] === "update"}
-                    <Badge>Update</Badge>
+                    <Badge>{$t.updateBadge}</Badge>
                   {:else if $onWatch[app.id] === "installed"}
-                    <Badge quiet>Installed</Badge>
+                    <Badge quiet>{$t.installed}</Badge>
                   {/if}
                   <span class="count">
                     <Icon name="download" size={14} />
@@ -82,7 +83,7 @@
             </a>
           </li>
         {:else}
-          <li class="empty">No apps yet. The first ones are on their way.</li>
+          <li class="empty">{$t.noApps}</li>
         {/each}
         <!-- the shelf is the cmf-tech-community/apps repository: a merged PR there is an app
              here — so the way in is the shelf's own last card, an empty slot to fill -->
@@ -90,9 +91,9 @@
           <a class="row make" href={MAKE_AN_APP} target="_blank" rel="noopener noreferrer">
             <span class="app-icon slot"><Icon name="add" size={28} /></span>
             <span class="text">
-              <span class="title type-subtitle">Make your own app</span>
+              <span class="title type-subtitle">{$t.makeApp}</span>
               <span class="desc type-small">
-                Write it in Rust and open a pull request. Once it’s merged, it shows up here.
+                {$t.makeAppDesc}
               </span>
             </span>
             <Icon name="open_in_new" size={22} class="go" />

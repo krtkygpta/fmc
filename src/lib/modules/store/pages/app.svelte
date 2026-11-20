@@ -14,6 +14,7 @@
   import { bleModel } from "$lib/modules/device/model";
   import { MAKE_AN_APP } from "../lib/links";
   import { storeModel } from "../model";
+  import { t } from "../i18n";
 
   interface Props {
     id: string;
@@ -51,16 +52,16 @@
   const stats = $derived(
     $app
       ? [
-          ...($app.version ? [{ label: "Version", value: $app.version }] : []),
-          ...($app.abi ? [{ label: "App ABI", value: $app.abi }] : []),
-          { label: "Downloads", value: compact($app.downloads) },
+          ...($app.version ? [{ label: $t.version, value: $app.version }] : []),
+          ...($app.abi ? [{ label: $t.appAbi, value: $app.abi }] : []),
+          { label: $t.downloads, value: compact($app.downloads) },
         ]
       : [],
   );
   const shots = $derived<string[]>($app?.screenshots ?? []);
 </script>
 
-<svelte:head><title>{$app?.name ?? "App"} — app for the CMF Watch Pro 2</title></svelte:head>
+<svelte:head><title>{$t.appTitle($app?.name)}</title></svelte:head>
 
 <Page>
   <div class="detail">
@@ -80,9 +81,9 @@
             <!-- read from the watch: the build there against this package (store.model) -->
             <div>
               {#if state === "update"}
-                <Badge>Update available</Badge>
+                <Badge>{$t.updateAvailable}</Badge>
               {:else}
-                <Badge quiet>Installed on your watch</Badge>
+                <Badge quiet>{$t.installedOnYourWatch}</Badge>
               {/if}
             </div>
           {/if}
@@ -104,12 +105,12 @@
             disabled={!$app.package}
           >
             <Icon name="download" size={22} />
-            Download
+            {$t.download}
           </Button>
           {#if !$watch}
             <Button size="large" onClick={() => connectRequested()} disabled={$connecting}>
               <Icon name="bluetooth" size={22} />
-              {$connecting ? "Connecting…" : "Connect"}
+              {$connecting ? $t.connecting : $t.connect}
             </Button>
           {:else}
             <Button
@@ -118,26 +119,33 @@
               disabled={!$app.package || busy || state === "installed"}
             >
               <Icon name={state === "update" ? "upgrade" : "install_desktop"} size={22} />
-              {state === "update" ? "Update" : state === "installed" ? "Installed" : "Install"}
+              {state === "update"
+                ? $t.updateBtn
+                : state === "installed"
+                  ? $t.installed
+                  : $t.install}
             </Button>
           {/if}
         </div>
         {#if $installing}
           <div class="progress">
             <div class="progress-row type-caption">
-              <span>Installing on the watch</span>
+              <span>{$t.installingOnWatch}</span>
               <span class="pct type-mono">{$installProgress ?? 0}%</span>
             </div>
             <progress max="100" value={$installProgress ?? 0}></progress>
           </div>
         {/if}
         {#if $installed}
-          <p class="ok"><Icon name="check_circle" size={20} /> Installed — open it from Apps.</p>
+          <p class="ok">
+            <Icon name="check_circle" size={20} />
+            {$t.installedOpenApps}
+          </p>
         {/if}
         {#if error}<p class="err">{error}</p>{/if}
         {#if $wp2 === "stock"}
           <p class="muted type-caption">
-            The watch runs stock firmware — <a href="/firmware">flash the patched firmware</a> first.
+            {$t.stockBefore} <a href="/firmware">{$t.stockLink}</a>{$t.stockAfter}
           </p>
         {/if}
       </section>
@@ -147,7 +155,7 @@
       {#if shots.length}
         <div class="shots">
           {#each shots as shot (shot)}
-            <img src={pb.files.getURL($app, shot)} alt="{$app.name} on the watch" loading="lazy" />
+            <img src={pb.files.getURL($app, shot)} alt={$t.shotAlt($app.name)} loading="lazy" />
           {/each}
         </div>
       {/if}
@@ -159,39 +167,43 @@
       {/if}
 
       <details class="more">
-        <summary class="type-subtitle">Details</summary>
+        <summary class="type-subtitle">{$t.details}</summary>
         <div class="more-body">
           <ol>
             <li>
               <span class="n type-label">1</span>
               <span>
-                The watch needs the <a href="/firmware">patched firmware</a> and the App Loader
-                once: they add an
-                <b>Apps</b> row and the channel that installs packages.
+                {$t.step1a} <a href="/firmware">{$t.step1Link}</a>
+                {$t.step1b}
+                <b>Apps</b>
+                {$t.step1c}
               </span>
             </li>
             <li>
               <span class="n type-label">2</span>
               <span>
-                Without FMC, send the package with the <code>wp2apps</code> tool:
+                {$t.step2} <code>wp2apps</code>{$t.step2Tool}
                 <code class="cmd">wp2apps install app.wp2app --address …</code>
               </span>
             </li>
             <li>
               <span class="n type-label">3</span>
               <span>
-                Open <b>Apps</b> at the end of the watch's app list (list style, not the waterfall).
+                {$t.step3a} <b>Apps</b>
+                {$t.step3b}
               </span>
             </li>
           </ol>
           <div class="links">
             {#if $app.source}
               <Button kind="secondary" href={$app.source} external>
-                <Icon name="code" size={20} /> Source
+                <Icon name="code" size={20} />
+                {$t.source}
               </Button>
             {/if}
             <Button kind="secondary" href={MAKE_AN_APP} external>
-              <Icon name="menu_book" size={20} /> Write your own app
+              <Icon name="menu_book" size={20} />
+              {$t.writeOwnApp}
             </Button>
           </div>
         </div>
@@ -199,7 +211,7 @@
 
       <p class="dates type-caption">
         <Icon name="calendar_today" size={14} />
-        Updated {day($app.updated)}
+        {$t.updated(day($app.updated))}
       </p>
     {:else if $loading}
       <div class="head">
@@ -213,7 +225,7 @@
       <Skeleton height="4rem" />
       <Skeleton height="8rem" />
     {:else}
-      <p class="empty">App not found.</p>
+      <p class="empty">{$t.appNotFound}</p>
     {/if}
   </div>
 </Page>

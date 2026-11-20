@@ -4,6 +4,7 @@
   import { Button } from "$lib/shared/components/button";
   import { Icon } from "$lib/shared/components/icon";
   import { Page } from "$lib/shared/components/page";
+  import { t } from "../i18n";
 
   const REPO = "https://github.com/fmctools/companion";
   // ponytail: GitHub's "latest release" page, not the .apk itself — the asset's name carries the
@@ -12,32 +13,12 @@
   const TESTFLIGHT = "https://testflight.apple.com/join/ByWsMnfD";
 
   const features = [
-    {
-      icon: "storefront",
-      title: "The FMC store",
-      text: "Browse watch faces from fmc.tools and put them on the watch.",
-    },
-    {
-      icon: "apps",
-      title: "Watch apps",
-      text: "See the apps on the watch and their settings, and which ones have an update.",
-    },
-    {
-      icon: "cell_tower",
-      title: "Phone services",
-      text: "Watch apps can ask for calendar, location, weather, notifications and http. Each app gets its own switch for each service.",
-    },
-    {
-      icon: "system_update",
-      title: "Firmware updates",
-      text: "Update the watch firmware over the stock OTA.",
-    },
-    {
-      icon: "link",
-      title: "No pairing popup",
-      text: "It rides the link Nothing X already holds, and Nothing X keeps working.",
-    },
-  ];
+    { key: "store", icon: "storefront" },
+    { key: "apps", icon: "apps" },
+    { key: "services", icon: "cell_tower" },
+    { key: "firmware", icon: "system_update" },
+    { key: "pairing", icon: "link" },
+  ] as const;
 </script>
 
 <svelte:head>
@@ -52,14 +33,13 @@
   <article>
     <h1 class="type-title">FMC Companion</h1>
     <p class="lead">
-      The phone app for the CMF Watch Pro 2 and the FMC store. Open source under MIT, for Android
-      and iOS.
+      {$t.lead}
     </p>
 
     <div class="actions">
       <Button href={APK} external size="large">
         <Icon name="android" />
-        Download APK
+        {$t.downloadApk}
       </Button>
       <Button href={TESTFLIGHT} external kind="secondary" size="large">
         <Icon name="phone_iphone" />
@@ -68,42 +48,39 @@
     </div>
 
     <p class="beta type-small">
-      <strong>Android is a beta.</strong> Needs Android 12 or newer. The Bluetooth link on Android
-      hasn't been tested on a real watch yet, so expect rough edges and
-      <a href="{REPO}/issues" target="_blank" rel="noopener noreferrer">tell us</a> what breaks.
+      <strong>{$t.betaStrong}</strong>
+      {$t.betaText}
+      <a href="{REPO}/issues" target="_blank" rel="noopener noreferrer">{$t.tellUs}</a>{$t.betaEnd}
     </p>
 
     <ul class="features">
-      {#each features as f (f.title)}
+      {#each features as f (f.key)}
         <li>
           <span class="glyph"><Icon name={f.icon} size={22} /></span>
           <span>
-            <strong>{f.title}</strong>
-            <span class="text">{f.text}</span>
+            <strong>{$t.features[f.key].title}</strong>
+            <span class="text">{$t.features[f.key].text}</span>
           </span>
         </li>
       {/each}
     </ul>
 
-    <h2 class="type-heading">Before you start</h2>
+    <h2 class="type-heading">{$t.beforeStart}</h2>
     <ul class="notes">
-      <li>Made for the CMF Watch Pro 2.</li>
-      <li>Installing a watch face needs Nothing X closed first.</li>
-      <li>
-        The APK is signed and built by CI from every Android change; GitHub lists every build on the
-        releases page.
-      </li>
+      <li>{$t.noteDevice}</li>
+      <li>{$t.noteNothingX}</li>
+      <li>{$t.noteCi}</li>
     </ul>
 
     <footer>
       <a href={REPO} target="_blank" rel="noopener noreferrer">
         <Icon name="code" size={18} />
-        Source on GitHub
+        {$t.sourceOnGithub}
         <Icon name="open_in_new" size={16} />
       </a>
       <a href="/privacy">
         <Icon name="shield" size={18} />
-        Privacy policy
+        {$t.privacy}
       </a>
     </footer>
   </article>
